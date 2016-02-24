@@ -229,6 +229,7 @@ static int ioctl_s_parm(struct v4l2_int_device *s, struct v4l2_streamparm *a)
 	struct v4l2_fract *timeperframe = &a->parm.capture.timeperframe;
 	u32 tgt_fps;	/* target frames per secound */
 	enum ov5640_frame_rate frame_rate;
+	enum ov5640_mode mode = (u32)a->parm.capture.capturemode;
 	enum ov5640_mode orig_mode;
 	int ret = 0;
 
@@ -269,6 +270,8 @@ static int ioctl_s_parm(struct v4l2_int_device *s, struct v4l2_streamparm *a)
 		}
 
 		orig_mode = sensor->streamcap.capturemode;
+		ov5640_data.pix.width =	ov5640_mode_info_data[frame_rate][mode].width;
+		ov5640_data.pix.height = ov5640_mode_info_data[frame_rate][mode].height;
 		sensor->streamcap.timeperframe = *timeperframe;
 		sensor->streamcap.capturemode =
 				(u32)a->parm.capture.capturemode;
@@ -314,6 +317,29 @@ static int ioctl_g_fmt_cap(struct v4l2_int_device *s, struct v4l2_format *f)
 	return 0;
 }
 
+static int ioctl_s_fmt_cap(struct v4l2_int_device *s, struct v4l2_format *f)
+{
+	u32 format = f->fmt.pix.pixelformat;
+	int ret = 0;
+
+	switch (format) {
+	case V4L2_PIX_FMT_RGB565:
+		ov5640_data.pix.pixelformat = format;
+		break;
+	case V4L2_PIX_FMT_UYVY:
+		ov5640_data.pix.pixelformat = format;
+		break;
+	case V4L2_PIX_FMT_GREY:
+		ov5640_data.pix.pixelformat = format;
+		break;
+	default:
+		pr_debug("case not supported\n");
+		break;
+	}
+
+	return ret;
+}
+
 /*!
  * ioctl_g_ctrl - V4L2 sensor interface handler for VIDIOC_G_CTRL ioctl
  * @s: pointer to standard V4L2 device structure
@@ -340,14 +366,44 @@ static int ioctl_g_ctrl(struct v4l2_int_device *s, struct v4l2_control *vc)
 	case V4L2_CID_SATURATION:
 		vc->value = ov5640_data.saturation;
 		break;
+	case V4L2_CID_VFLIP:
+		vc->value = ov5640_data.vflip;
+		break;
+	case V4L2_CID_HFLIP:
+		vc->value = ov5640_data.hflip;
+		break;
+	case V4L2_CID_COLORFX:
+		vc->value = ov5640_data.effects;
+		break;
+	case V4L2_CID_AUTO_WHITE_BALANCE:
+		vc->value = ov5640_data.aw_mode;
+		break;
+	case V4L2_CID_WHITE_BALANCE_TEMPERATURE:
+		vc->value = ov5640_data.wb_temp;
+		break;
+	case V4L2_CID_TEST_PATTERN:
+		vc->value = ov5640_data.pattern;
+		break;
 	case V4L2_CID_RED_BALANCE:
 		vc->value = ov5640_data.red;
 		break;
 	case V4L2_CID_BLUE_BALANCE:
 		vc->value = ov5640_data.blue;
 		break;
-	case V4L2_CID_EXPOSURE:
+	case V4L2_CID_EXPOSURE_AUTO:
 		vc->value = ov5640_data.ae_mode;
+		break;
+	case V4L2_CID_EXPOSURE_ABSOLUTE:
+		vc->value = ov5640_data.exposure_step;
+		break;
+	case V4L2_CID_AUTOGAIN:
+		vc->value = ov5640_data.ag_mode;
+		break;
+	case V4L2_CID_GAIN:
+		vc->value = ov5640_data.gain;
+		break;
+	case V4L2_CID_FOCUS_ABSOLUTE:
+		vc->value = ov5640_data.focus_step;
 		break;
 	default:
 		ret = -EINVAL;
@@ -374,14 +430,39 @@ static int ioctl_s_ctrl(struct v4l2_int_device *s, struct v4l2_control *vc)
 
 	switch (vc->id) {
 	case V4L2_CID_BRIGHTNESS:
+		ov5640_data.brightness = vc->value;
 		break;
 	case V4L2_CID_CONTRAST:
+		ov5640_data.contrast = vc->value;
 		break;
 	case V4L2_CID_SATURATION:
+		ov5640_data.saturation = vc->value;
 		break;
 	case V4L2_CID_HUE:
+		ov5640_data.hue = vc->value;
 		break;
 	case V4L2_CID_AUTO_WHITE_BALANCE:
+		ov5640_data.aw_mode = vc->value;
+		break;
+    case V4L2_CID_WHITE_BALANCE_TEMPERATURE:
+		ov5640_data.wb_temp = vc->value;
+		break;
+    case V4L2_CID_HFLIP:
+		ov5640_data.hflip = vc->value;
+		break;
+    case V4L2_CID_VFLIP:
+		ov5640_data.vflip = vc->value;
+		break;
+    case V4L2_CID_AUTO_FOCUS_START:
+		ov5640_data.focus_step = 0;
+		break;
+	case V4L2_CID_AUTO_FOCUS_STOP:
+		break;
+	case V4L2_CID_FOCUS_ABSOLUTE:
+		ov5640_data.focus_step = vc->value;
+		break;
+	case V4L2_CID_COLORFX:
+		ov5640_data.effects = vc->value;
 		break;
 	case V4L2_CID_DO_WHITE_BALANCE:
 		break;
@@ -391,15 +472,20 @@ static int ioctl_s_ctrl(struct v4l2_int_device *s, struct v4l2_control *vc)
 		break;
 	case V4L2_CID_GAMMA:
 		break;
-	case V4L2_CID_EXPOSURE:
+	case V4L2_CID_EXPOSURE_AUTO:
+		ov5640_data.ae_mode = vc->value;
+		break;
+	case V4L2_CID_EXPOSURE_ABSOLUTE:
+		ov5640_data.exposure_step = vc->value;
+		ov5640_data.ae_mode = 0;
 		break;
 	case V4L2_CID_AUTOGAIN:
+		ov5640_data.ag_mode = vc->value;
 		break;
 	case V4L2_CID_GAIN:
-		break;
-	case V4L2_CID_HFLIP:
-		break;
-	case V4L2_CID_VFLIP:
+
+		ov5640_data.gain = vc->value;
+		ov5640_data.ag_mode = 0;
 		break;
 	default:
 		retval = -EPERM;
@@ -548,7 +634,7 @@ static struct v4l2_int_ioctl_desc ov5640_ioctl_desc[] = {
 /*	{vidioc_int_try_fmt_cap_num,
 				(v4l2_int_ioctl_func *)ioctl_try_fmt_cap}, */
 	{vidioc_int_g_fmt_cap_num, (v4l2_int_ioctl_func *) ioctl_g_fmt_cap},
-/*	{vidioc_int_s_fmt_cap_num, (v4l2_int_ioctl_func *) ioctl_s_fmt_cap}, */
+	{vidioc_int_s_fmt_cap_num, (v4l2_int_ioctl_func *) ioctl_s_fmt_cap},
 	{vidioc_int_g_parm_num, (v4l2_int_ioctl_func *) ioctl_g_parm},
 	{vidioc_int_s_parm_num, (v4l2_int_ioctl_func *) ioctl_s_parm},
 /*	{vidioc_int_queryctrl_num, (v4l2_int_ioctl_func *)ioctl_queryctrl}, */
