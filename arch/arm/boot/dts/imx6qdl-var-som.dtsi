@@ -566,6 +566,13 @@
 			>;
 		};
 
+        pinctrl_uart5_1: uart5grp-1 {
+            fsl,pins = <
+                MX6QDL_PAD_KEY_COL1__UART5_TX_DATA 0x1b0b1
+                MX6QDL_PAD_KEY_ROW1__UART5_RX_DATA 0x1b0b1
+                >;
+        };
+
 		pinctrl_usbotg_var: usbotggrp-3 {
 			fsl,pins = <
 				MX6QDL_PAD_GPIO_4__GPIO1_IO04 		0x17059
@@ -732,6 +739,12 @@
 	pinctrl-0 = <&pinctrl_uart3_2>;
 	uart-has-rtscts;
 	status = "okay";
+};
+
+&uart5 {
+    pinctrl-names = "default";
+    pinctrl-0 = <&pinctrl_uart5_1>;
+    status = "okay";
 };
 
 &can1 {
