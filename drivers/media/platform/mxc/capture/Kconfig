@@ -27,6 +27,18 @@ config MXC_CAMERA_OV5640_MIPI
 	---help---
 	  If you plan to use the ov5640 Camera with mipi interface in your MXC system, say Y here.
 
+config MXC_CAMERA_OV5640_DUAL_MIPI
+	tristate "OmniVision ov5640 dual camera support using mipi"
+	depends on !VIDEO_MXC_EMMA_CAMERA && I2C
+	---help---
+	  If you plan to use the dual ov5640 Cameras with mipi interface in your MXC system, say Y here.
+
+config MXC_CAMERA_OV5640_DUMMY
+	tristate "Dummy driver for OmniVision ov5640 camera"
+	depends on !VIDEO_MXC_EMMA_CAMERA && I2C
+	---help---
+	  If you plan to use the dummy ov5640 driver in your MXC system, say Y here.
+
 config MXC_TVIN_ADV7180
 	tristate "Analog Device adv7180 TV Decoder Input support"
 	depends on !VIDEO_MXC_EMMA_CAMERA && I2C

@@ -48,6 +48,11 @@ enum imx_v4l2_devtype {
 	IMX6_V4L2,
 };
 
+typedef struct _register_info {
+	u16 reg;
+	u8  val;
+} register_info;
+
 /*!
  * v4l2 frame structure.
  */
@@ -168,10 +173,25 @@ typedef struct _cam_data {
 	int hue;
 	int contrast;
 	int saturation;
+	int aw_mode;
+	int wb_temp;
+	int vflip;
+	int hflip;
+	int focus_step;
+	int zoom_step;
+	int effects;
+	int pattern;
 	int red;
 	int green;
 	int blue;
 	int ae_mode;
+	int ag_mode;
+	int sharpness;
+	int gain;
+	int backlight;
+	int gamma;
+	int exposure_step;
+	int scene_mode;
 
 	/* standard */
 	struct v4l2_streamparm streamparm;
@@ -245,16 +265,34 @@ struct sensor_data {
 	int hue;
 	int contrast;
 	int saturation;
+	int aw_mode;
+	int wb_temp;
+	int vflip;
+	int hflip;
+	int focus_step;
+	int zoom_step;
+	int effects;
+	int pattern;
 	int red;
 	int green;
 	int blue;
 	int ae_mode;
+	int ag_mode;
+	int sharpness;
+	int gain;
+	int backlight;
+	int gamma;
+	int exposure_step;
+	int scene_mode;
+
+	register_info reg_info;
 
 	u32 mclk;
 	u8 mclk_source;
 	struct clk *sensor_clk;
-	int ipu;
 	int csi;
+	int ipu;
+	int vc;
 
 	void (*io_init)(void);
 };

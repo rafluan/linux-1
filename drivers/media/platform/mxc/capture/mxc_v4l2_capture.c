@@ -47,6 +47,7 @@
 #define init_MUTEX(sem)         sema_init(sem, 1)
 
 #define V4L2_CID_DRIVER_BASE		(V4L2_CID_USER_BASE | 0x1001)
+#define V4L2_CID_FOCUS_TRIGGER		(V4L2_CID_DRIVER_BASE + 1)
 #define V4L2_CID_GET_REGISTER		(V4L2_CID_DRIVER_BASE + 2)
 #define V4L2_CID_SET_REGISTER		(V4L2_CID_DRIVER_BASE + 3)
 
@@ -395,6 +396,7 @@ static inline int valid_mode(u32 palette)
 		(palette == V4L2_PIX_FMT_YUYV) ||
 		(palette == V4L2_PIX_FMT_YUV420) ||
 		(palette == V4L2_PIX_FMT_YVU420) ||
+		(palette == V4L2_PIX_FMT_GREY) ||
 		(palette == V4L2_PIX_FMT_NV12));
 }
 
@@ -914,6 +916,10 @@ static int mxc_v4l2_s_fmt(cam_data *cam, struct v4l2_format *f)
 			size = f->fmt.pix.width * f->fmt.pix.height * 3 / 2;
 			bytesperline = f->fmt.pix.width;
 			break;
+		case V4L2_PIX_FMT_GREY:
+			size = f->fmt.pix.width * f->fmt.pix.height;
+			bytesperline = f->fmt.pix.width;
+			break;
 		case V4L2_PIX_FMT_NV12:
 			size = f->fmt.pix.width * f->fmt.pix.height * 3 / 2;
 			bytesperline = f->fmt.pix.width;
@@ -933,6 +939,12 @@ static int mxc_v4l2_s_fmt(cam_data *cam, struct v4l2_format *f)
 			size = f->fmt.pix.sizeimage;
 
 		cam->v2f.fmt.pix = f->fmt.pix;
+
+		retval = vidioc_int_s_fmt_cap(cam->sensor, f);
+		if (retval) {
+			pr_err("%s: vidioc_int_s_fmt_cap returned an error %d\n",
+				__func__, retval);
+		}
 		break;
 	case V4L2_BUF_TYPE_VIDEO_OVERLAY:
 		pr_debug("   type=V4L2_BUF_TYPE_VIDEO_OVERLAY\n");
@@ -978,18 +990,164 @@ static int mxc_v4l2_g_ctrl(cam_data *cam, struct v4l2_control *c)
 	 * locally, but they are for now. */
 	switch (c->id) {
 	case V4L2_CID_HFLIP:
-		/* This is handled in the ipu. */
-		if (cam->rotation == IPU_ROTATE_HORIZ_FLIP)
-			c->value = 1;
+		if (cam->sensor) {
+                        c->value = cam->hflip;
+                        status = vidioc_int_g_ctrl(cam->sensor, c);
+                        cam->hflip = c->value;
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        status = -ENODEV;
+                }
+                break;
+	case V4L2_CID_SHARPNESS:
+		if (cam->sensor) {
+			c->value = cam->sharpness;
+			status = vidioc_int_g_ctrl(cam->sensor, c);
+			cam->sharpness = c->value;
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			status = -ENODEV;
+		}
 		break;
+	case V4L2_CID_AUTOGAIN:
+		if (cam->sensor) {
+			c->value = cam->ag_mode;
+			status = vidioc_int_g_ctrl(cam->sensor, c);
+			cam->ag_mode = c->value;
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			status = -ENODEV;
+		}
+		break;
+	case V4L2_CID_GAIN:
+		if (cam->sensor) {
+			c->value = cam->gain;
+			status = vidioc_int_g_ctrl(cam->sensor, c);
+			cam->gain = c->value;
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			status = -ENODEV;
+		}
+		break;
+	case V4L2_CID_GAMMA:
+		if (cam->sensor) {
+			c->value = cam->gamma;
+			status = vidioc_int_g_ctrl(cam->sensor, c);
+			cam->gamma = c->value;
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			status = -ENODEV;
+		}
+		break;
+        case V4L2_CID_AUTO_WHITE_BALANCE:
+                if (cam->sensor) {
+                        c->value = cam->aw_mode;
+                        status = vidioc_int_g_ctrl(cam->sensor, c);
+                        cam->aw_mode = c->value;
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        status = -ENODEV;
+                }
+                break;
+        case V4L2_CID_WHITE_BALANCE_TEMPERATURE:
+                if (cam->sensor) {
+                        c->value = cam->wb_temp;
+                        status = vidioc_int_g_ctrl(cam->sensor, c);
+                        cam->wb_temp = c->value;
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        status = -ENODEV;
+                }
+                break;
+        case V4L2_CID_COLORFX:
+                if (cam->sensor) {
+                        c->value = cam->effects;
+                        status = vidioc_int_g_ctrl(cam->sensor, c);
+                        cam->effects = c->value;
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        status = -ENODEV;
+                }
+                break;
+        case V4L2_CID_SCENE_MODE:
+                if (cam->sensor) {
+                        c->value = cam->scene_mode;
+                        status = vidioc_int_g_ctrl(cam->sensor, c);
+                        cam->scene_mode = c->value;
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        status = -ENODEV;
+                }
+                break;
+        case V4L2_CID_TEST_PATTERN:
+                if (cam->sensor) {
+                        c->value = cam->pattern;
+                        status = vidioc_int_g_ctrl(cam->sensor, c);
+                        cam->pattern = c->value;
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        status = -ENODEV;
+                }
+                break;
+        case V4L2_CID_FOCUS_ABSOLUTE:
+                if (cam->sensor) {
+                        c->value = cam->focus_step;
+                        status = vidioc_int_g_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        status = -ENODEV;
+                }
+                break;
+        case V4L2_CID_FOCUS_TRIGGER:
+                if (cam->sensor) {
+                        status = vidioc_int_g_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        status = -ENODEV;
+                }
+                break;
+        case V4L2_CID_ZOOM_ABSOLUTE:
+                if (cam->sensor) {
+                        c->value = cam->zoom_step;
+                        status = vidioc_int_g_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        status = -ENODEV;
+                }
+                break;
 	case V4L2_CID_VFLIP:
-		/* This is handled in the ipu. */
-		if (cam->rotation == IPU_ROTATE_VERT_FLIP)
-			c->value = 1;
-		break;
+		if (cam->sensor) {
+                        c->value = cam->vflip;
+                        status = vidioc_int_g_ctrl(cam->sensor, c);
+                        cam->vflip = c->value;
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        status = -ENODEV;
+                }
+                break;
 	case V4L2_CID_MXC_ROT:
 		/* This is handled in the ipu. */
 		c->value = cam->rotation;
+		break;
+	case V4L2_CID_EXPOSURE_AUTO:
+		if (cam->sensor) {
+			c->value = cam->ae_mode;
+			status = vidioc_int_g_ctrl(cam->sensor, c);
+			cam->ae_mode = c->value;
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			status = -ENODEV;
+		}
+		break;
+	case V4L2_CID_EXPOSURE_ABSOLUTE:
+		if (cam->sensor) {
+			c->value = cam->exposure_step;
+			status = vidioc_int_g_ctrl(cam->sensor, c);
+			cam->exposure_step = c->value;
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			status = -ENODEV;
+		}
 		break;
 	case V4L2_CID_BRIGHTNESS:
 		if (cam->sensor) {
@@ -1068,6 +1226,20 @@ static int mxc_v4l2_g_ctrl(cam_data *cam, struct v4l2_control *c)
 	return status;
 }
 
+static int mxc_v4l2_query_ctrl(cam_data *cam, struct v4l2_queryctrl *qc)
+{
+        int status = 0;
+
+        pr_debug("In MVC:mxc_v4l2_query_ctrl\n");
+        if (cam->sensor) {
+                status = vidioc_int_queryctrl(cam->sensor, qc);
+        } else {
+                pr_err("ERROR: v4l2 capture: slave not found!\n");
+                status = -ENODEV;
+        }
+        return status;
+}
+
 /*!
  * V4L2 - set_control function
  *          V4L2_CID_PRIVATE_BASE is the extention for IPU preprocessing.
@@ -1092,35 +1264,23 @@ static int mxc_v4l2_s_ctrl(cam_data *cam, struct v4l2_control *c)
 
 	switch (c->id) {
 	case V4L2_CID_HFLIP:
-		/* This is done by the IPU */
-		if (c->value == 1) {
-			if ((cam->rotation != IPU_ROTATE_VERT_FLIP) &&
-			    (cam->rotation != IPU_ROTATE_180))
-				cam->rotation = IPU_ROTATE_HORIZ_FLIP;
-			else
-				cam->rotation = IPU_ROTATE_180;
-		} else {
-			if (cam->rotation == IPU_ROTATE_HORIZ_FLIP)
-				cam->rotation = IPU_ROTATE_NONE;
-			if (cam->rotation == IPU_ROTATE_180)
-				cam->rotation = IPU_ROTATE_VERT_FLIP;
-		}
-		break;
+        if (cam->sensor) {
+                        cam->hflip = c->value;
+                        ret = vidioc_int_s_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        ret = -ENODEV;
+                }
+                break;
 	case V4L2_CID_VFLIP:
-		/* This is done by the IPU */
-		if (c->value == 1) {
-			if ((cam->rotation != IPU_ROTATE_HORIZ_FLIP) &&
-			    (cam->rotation != IPU_ROTATE_180))
-				cam->rotation = IPU_ROTATE_VERT_FLIP;
-			else
-				cam->rotation = IPU_ROTATE_180;
-		} else {
-			if (cam->rotation == IPU_ROTATE_VERT_FLIP)
-				cam->rotation = IPU_ROTATE_NONE;
-			if (cam->rotation == IPU_ROTATE_180)
-				cam->rotation = IPU_ROTATE_HORIZ_FLIP;
-		}
-		break;
+        if (cam->sensor) {
+                        cam->vflip = c->value;
+                        ret = vidioc_int_s_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        ret = -ENODEV;
+                }
+                break;
 	case V4L2_CID_MXC_ROT:
 	case V4L2_CID_MXC_VF_ROT:
 		/* This is done by the IPU */
@@ -1198,6 +1358,42 @@ static int mxc_v4l2_s_ctrl(cam_data *cam, struct v4l2_control *c)
 			ret = -ENODEV;
 		}
 		break;
+	case V4L2_CID_SHARPNESS:
+		if (cam->sensor) {
+			cam->sharpness = c->value;
+			ret = vidioc_int_s_ctrl(cam->sensor, c);
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			ret = -ENODEV;
+		}
+		break;
+	case V4L2_CID_AUTOGAIN:
+		if (cam->sensor) {
+			cam->ag_mode = c->value;
+			ret = vidioc_int_s_ctrl(cam->sensor, c);
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			ret = -ENODEV;
+		}
+		break;
+	case V4L2_CID_GAIN:
+		if (cam->sensor) {
+			cam->gain = c->value;
+			ret = vidioc_int_s_ctrl(cam->sensor, c);
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			ret = -ENODEV;
+		}
+		break;
+	case V4L2_CID_GAMMA:
+		if (cam->sensor) {
+			cam->gamma = c->value;
+			ret = vidioc_int_s_ctrl(cam->sensor, c);
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			ret = -ENODEV;
+		}
+		break;
 	case V4L2_CID_RED_BALANCE:
 		if (cam->sensor) {
 			cam->red = c->value;
@@ -1216,7 +1412,7 @@ static int mxc_v4l2_s_ctrl(cam_data *cam, struct v4l2_control *c)
 			ret = -ENODEV;
 		}
 		break;
-	case V4L2_CID_EXPOSURE:
+	case V4L2_CID_EXPOSURE_AUTO:
 		if (cam->sensor) {
 			cam->ae_mode = c->value;
 			ret = vidioc_int_s_ctrl(cam->sensor, c);
@@ -1225,11 +1421,111 @@ static int mxc_v4l2_s_ctrl(cam_data *cam, struct v4l2_control *c)
 			ret = -ENODEV;
 		}
 		break;
+	case V4L2_CID_EXPOSURE_ABSOLUTE:
+		if (cam->sensor) {
+			cam->exposure_step = c->value;
+			ret = vidioc_int_s_ctrl(cam->sensor, c);
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			ret = -ENODEV;
+		}
+		break;
+        case V4L2_CID_TEST_PATTERN:
+                if (cam->sensor) {
+                        cam->pattern = c->value;
+                        ret = vidioc_int_s_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        ret = -ENODEV;
+                }
+                break;
+        case V4L2_CID_AUTO_WHITE_BALANCE:
+                if (cam->sensor) {
+                        cam->aw_mode = c->value;
+                        ret = vidioc_int_s_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        ret = -ENODEV;
+                }
+                break;
+        case V4L2_CID_WHITE_BALANCE_TEMPERATURE:
+                if (cam->sensor) {
+                        cam->wb_temp = c->value;
+                        ret = vidioc_int_s_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        ret = -ENODEV;
+                }
+                break;
+        case V4L2_CID_COLORFX:
+                if (cam->sensor) {
+                        cam->effects = c->value;
+                        ret = vidioc_int_s_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        ret = -ENODEV;
+                }
+                break;
+        case V4L2_CID_SCENE_MODE:
+                if (cam->sensor) {
+                        cam->scene_mode = c->value;
+                        ret = vidioc_int_s_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        ret = -ENODEV;
+                }
+                break;
+        case V4L2_CID_FOCUS_ABSOLUTE:
+                if (cam->sensor) {
+                        cam->focus_step = c->value;
+                        ret = vidioc_int_s_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        ret = -ENODEV;
+                }
+                break;
+        case V4L2_CID_FOCUS_TRIGGER:
+                if (cam->sensor) {
+                        ret = vidioc_int_s_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        ret = -ENODEV;
+                }
+                break;
+        case V4L2_CID_ZOOM_ABSOLUTE:
+                if (cam->sensor) {
+                        cam->zoom_step = c->value;
+                        ret = vidioc_int_s_ctrl(cam->sensor, c);
+                } else {
+                        pr_err("ERROR: v4l2 capture: slave not found!\n");
+                        ret = -ENODEV;
+                }
+                break;
 	case V4L2_CID_MXC_FLASH:
 #ifdef CONFIG_MXC_IPU_V1
 		ipu_csi_flash_strobe(true);
 #endif
 		break;
+        case V4L2_CID_AUTO_FOCUS_START: {
+                ipu_csi_enable_mclk_if(cam->ipu,CSI_MCLK_I2C, cam->csi, true, true);
+
+                ret = vidioc_int_s_ctrl(cam->sensor, c);
+
+                ipu_csi_enable_mclk_if(cam->ipu,CSI_MCLK_I2C, cam->csi, false, false);
+                break;
+        }
+
+        case V4L2_CID_AUTO_FOCUS_STOP: {
+                ipu_csi_enable_mclk_if(cam->ipu,CSI_MCLK_I2C, cam->csi, true, true);
+
+                if (vidioc_int_s_ctrl(cam->sensor, c)) {
+                        ret = -EINVAL;
+                }
+
+                ipu_csi_enable_mclk_if(cam->ipu,CSI_MCLK_I2C, cam->csi, false, false);
+
+                break;
+        }
 	case V4L2_CID_MXC_SWITCH_CAM:
 		if (cam->sensor == cam->all_sensors[c->value])
 			break;
@@ -1260,11 +1556,14 @@ static int mxc_v4l2_s_ctrl(cam_data *cam, struct v4l2_control *c)
 		vidioc_int_s_power(cam->sensor, 1);
 		vidioc_int_dev_init(cam->sensor);
 		break;
-	default:
-		pr_debug("   default case\n");
-		ret = -EINVAL;
-		break;
 	case V4L2_CID_GET_REGISTER:
+		if (cam->sensor) {
+			ret = vidioc_int_s_ctrl(cam->sensor, c);
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			ret = -ENODEV;
+		}
+		break;
 	case V4L2_CID_SET_REGISTER:
 		if (cam->sensor) {
 			ret = vidioc_int_s_ctrl(cam->sensor, c);
@@ -1272,6 +1571,11 @@ static int mxc_v4l2_s_ctrl(cam_data *cam, struct v4l2_control *c)
 			pr_err("ERROR: v4l2 capture: slave not found!\n");
 			ret = -ENODEV;
 		}
+		break;
+
+	default:
+		pr_debug("   default case\n");
+		ret = -EINVAL;
 		break;
 	}
 
@@ -1360,8 +1664,12 @@ static int mxc_v4l2_s_param(cam_data *cam, struct v4l2_streamparm *parm)
 	pr_debug("   clock_curr=mclk=%d\n", ifparm.u.bt656.clock_curr);
 	if (ifparm.u.bt656.clock_curr == 0)
 		csi_param.clk_mode = IPU_CSI_CLK_MODE_CCIR656_INTERLACED;
-	else
-		csi_param.clk_mode = IPU_CSI_CLK_MODE_GATED_CLK;
+	else {
+		if(!strcmp(cam->sensor->name, "ar1820"))
+			csi_param.clk_mode = IPU_CSI_CLK_MODE_NONGATED_CLK;
+		else /* omnivision */
+			csi_param.clk_mode = IPU_CSI_CLK_MODE_GATED_CLK;
+	}
 
 	csi_param.pixclk_pol = ifparm.u.bt656.latch_clk_inv;
 
@@ -1594,9 +1902,6 @@ static int mxc_v4l_open(struct file *file)
 			"cam_data not found!\n");
 		return -EBADF;
 	}
-
-	printk("%s(): LINE %d: cam->sensor is 0x%08x \n",__func__,__LINE__,(unsigned int)cam->sensor);
-	if(cam->sensor!=NULL) printk("%s(): LINE %d: cam->sensor->type is %d \n",__func__,__LINE__,cam->sensor->type);
 
 	if (cam->sensor == NULL ||
 	    cam->sensor->type != v4l2_int_type_slave) {
@@ -2421,6 +2726,10 @@ static long mxc_v4l_do_ioctl(struct file *file,
 	}
 	case VIDIOC_TRY_FMT:
 	case VIDIOC_QUERYCTRL:
+                pr_debug(" case VIDIOC_QUERY_CTRL\n");
+                retval = mxc_v4l2_query_ctrl(cam, arg);
+                break;
+
 	case VIDIOC_G_TUNER:
 	case VIDIOC_S_TUNER:
 	case VIDIOC_G_FREQUENCY:
@@ -2829,12 +3138,10 @@ static int mxc_v4l2_probe(struct platform_device *pdev)
 	pdev->dev.release = camera_platform_release;
 
 	/* Set up the v4l2 device and register it*/
-	printk("%s(): %d:  Set up the v4l2 device and register it. \n",__func__,__LINE__);
 	cam->self->priv = cam;
 	v4l2_int_device_register(cam->self);
 
 	/* register v4l video device */
-	printk("%s(): %d:  register v4l video device \n",__func__,__LINE__);
 	if (video_register_device(cam->video_dev, VFL_TYPE_GRABBER, video_nr)
 		< 0) {
 		kfree(cam);
@@ -2843,8 +3150,6 @@ static int mxc_v4l2_probe(struct platform_device *pdev)
 		return -1;
 	}
 	pr_debug("   Video device registered: %s #%d\n",
-		 cam->video_dev->name, cam->video_dev->minor);
-	printk("   Video device registered: %s #%d\n",
 		 cam->video_dev->name, cam->video_dev->minor);
 
 	if (device_create_file(&cam->video_dev->dev,
