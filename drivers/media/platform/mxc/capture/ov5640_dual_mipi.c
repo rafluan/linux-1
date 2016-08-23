@@ -814,7 +814,8 @@ static s32 ov5640_write_reg_cam1(u16 reg, u8 val)		// write only to camera 1
 	return 0;
 }
 
-static s32 ov5640_write_reg(u16 reg, u8 val)		// writes to both cameras by using the broadcast I2C address
+static s32 ov5640_do_write_reg(u16 reg, u8 val)		// writes to both cameras by using the broadcast I2C address
+
 {
 	u8 au8Buf[3] = {0};
 
@@ -833,29 +834,62 @@ static s32 ov5640_write_reg(u16 reg, u8 val)		// writes to both cameras by using
 	return 0;
 }
 
+static s32 ov5640_write_reg(u16 reg, u8 val)		// writes to both cameras by using the broadcast I2C address
+
+{
+	int tries = 10;	
+	u8 readBack;
+	
+	while(tries > 0){
+		tries--;
+		if(ov5640_do_write_reg(reg, val) == 0){
+			ov5640_read_reg(reg, &readBack);
+			if(reg == 0x3008){
+				val &= 0x7f;	// mask off software reset bit which is self clearing
+			}
+			if(readBack == val){
+				if(tries != 9){
+					pr_info("%s:write reg %d tries for reg=%x,val=%x\n", __func__, 10 - tries, reg, readBack);
+				}
+				return 0;
+			}
+		}
+	}
+
+	// timeout
+	pr_err("%s:write reg error:reg=%x,val=%x,readBack=%x (10 tries)\n", __func__, reg, val, readBack);
+
+	return -1;	
+}
+
 static s32 ov5640_read_reg(u16 reg, u8 *val)
 {
 	u8 au8RegBuf[2] = {0};
 	u8 u8RdVal = 0;
+	int tries = 10;
 
 	au8RegBuf[0] = reg >> 8;
 	au8RegBuf[1] = reg & 0xff;
 
-	if (2 != i2c_master_send(ov5640_data.i2c_client, au8RegBuf, 2)) {
-		pr_err("%s:write reg error:reg=%x\n",
-				__func__, reg);
-		return -1;
+	while(tries > 0){
+		tries--;
+
+		if (2 != i2c_master_send(ov5640_data.i2c_client, au8RegBuf, 2)) {
+			pr_err("%s:write reg error:reg=%x\n",
+					__func__, reg);
+			return -1;
+		}
+
+		udelay(20);	// needed by hw
+
+		if (1 == i2c_master_recv(ov5640_data.i2c_client, &u8RdVal, 1)) {
+			*val = u8RdVal;
+			return u8RdVal;
+		}
 	}
 
-	udelay(20);	// needed by hw
-
-	if (1 != i2c_master_recv(ov5640_data.i2c_client, &u8RdVal, 1)) {
-		pr_err("%s:read reg error:reg=%x,val=%x\n",
-				__func__, reg, u8RdVal);
-		return -1;
-	}
-
-	*val = u8RdVal;
+	// timeout
+	pr_err("%s:read reg error:reg=%x,val=%x (10 tries)\n", __func__, reg, u8RdVal);
 
 	return u8RdVal;
 }
@@ -2732,6 +2766,14 @@ static int ov5640_probe(struct i2c_client *client,
 	struct device *dev = &client->dev;
 	int retval, bcast_addr;
 	u8 chip_id_high, chip_id_low;
+
+	/*
+	   retries of low level I2C reads will cause issues with our I2C transport,
+	   we will handle retrying the full write/read sequence needed to read a register
+	 */
+	pr_info("ov5640_dual_mipi: orig retries = %d\n", client->adapter->retries);
+	client->adapter->retries = 0;
+	pr_info("ov5640_dual_mipi: new retries = %d\n", client->adapter->retries);
 
 	/* create i2c_client for the broadcast write address */
 	retval = of_property_read_u32(dev->of_node, "bcast", &(bcast_addr));
