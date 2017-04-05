@@ -814,7 +814,7 @@ static s32 ov5640_write_reg_cam1(u16 reg, u8 val)		// write only to camera 1
 	return 0;
 }
 
-static s32 ov5640_do_write_reg(u16 reg, u8 val)		// writes to both cameras by using the broadcast I2C address
+static s32 ov5640_write_reg(u16 reg, u8 val)		// writes to both cameras by using the broadcast I2C address
 
 {
 	u8 au8Buf[3] = {0};
@@ -834,6 +834,7 @@ static s32 ov5640_do_write_reg(u16 reg, u8 val)		// writes to both cameras by us
 	return 0;
 }
 
+#if 0
 static s32 ov5640_write_reg(u16 reg, u8 val)		// writes to both cameras by using the broadcast I2C address
 
 {
@@ -861,6 +862,7 @@ static s32 ov5640_write_reg(u16 reg, u8 val)		// writes to both cameras by using
 
 	return -1;	
 }
+#endif
 
 static s32 ov5640_read_reg(u16 reg, u8 *val)
 {
