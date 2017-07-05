@@ -231,7 +231,7 @@
 		status = "disabled";
 	};
 
-	lcd@0 {
+	lcd: lcd@0 {
 		compatible = "fsl,lcd";
 		ipu_id = <0>;
 		disp_id = <0>;
@@ -603,31 +603,16 @@
 	pinctrl-0 = <&pinctrl_hog>;
 
 	imx6qdl-sabresd {
+		//Removendo conflitos
 		pinctrl_hog: hoggrp {
 			fsl,pins = <
-				MX6QDL_PAD_NANDF_D0__GPIO2_IO00 0x80000000
-				MX6QDL_PAD_NANDF_D1__GPIO2_IO01 0x80000000
 				MX6QDL_PAD_NANDF_D2__GPIO2_IO02 0x80000000
-				MX6QDL_PAD_NANDF_D3__GPIO2_IO03 0x80000000
-				MX6QDL_PAD_GPIO_0__CCM_CLKO1    0x130b0
-				MX6QDL_PAD_ENET_TXD1__GPIO1_IO29 0x80000000
-				MX6QDL_PAD_EIM_D22__GPIO3_IO22  0x80000000
-				MX6QDL_PAD_ENET_CRS_DV__GPIO1_IO25 0x80000000
-				MX6QDL_PAD_EIM_D26__GPIO3_IO26 0x80000000
 				MX6QDL_PAD_EIM_CS1__GPIO2_IO24 0x80000000
-				MX6QDL_PAD_ENET_RXD0__GPIO1_IO27 0x80000000
 				MX6QDL_PAD_EIM_A25__GPIO5_IO02 0x80000000
-				MX6QDL_PAD_EIM_D23__GPIO3_IO23 0x80000000
-				MX6QDL_PAD_EIM_EB3__GPIO2_IO31 0x80000000
 				MX6QDL_PAD_SD1_CMD__GPIO1_IO18 0x80000000
 				MX6QDL_PAD_EIM_D16__GPIO3_IO16 0x80000000
 				MX6QDL_PAD_SD3_RST__GPIO7_IO08	0x80000000
-				MX6QDL_PAD_GPIO_9__GPIO1_IO09 	0x80000000
 				MX6QDL_PAD_EIM_DA9__GPIO3_IO09 0x80000000
-				MX6QDL_PAD_NANDF_CS0__GPIO6_IO11 0x80000000
-				MX6QDL_PAD_NANDF_CS1__GPIO6_IO14 0x80000000
-				MX6QDL_PAD_NANDF_CS2__GPIO6_IO15 0x80000000
-				MX6QDL_PAD_NANDF_CS3__GPIO6_IO16 0x80000000
 			>;
 		};
 
@@ -640,24 +625,22 @@
 			>;
 		};
 
+		//Removendo conflitos
 		pinctrl_ecspi1: ecspi1grp {
 			fsl,pins = <
 				MX6QDL_PAD_KEY_COL1__ECSPI1_MISO	0x100b1
-				MX6QDL_PAD_KEY_ROW0__ECSPI1_MOSI	0x100b1
-				MX6QDL_PAD_KEY_COL0__ECSPI1_SCLK	0x100b1
-				MX6QDL_PAD_KEY_ROW1__GPIO4_IO09		0x1b0b0
 			>;
 		};
 
+		//Removendo conflitos
 		pinctrl_i2c2_egalax_int: egalax_i2c2_intgrp {
 			fsl,pins = <
-				MX6QDL_PAD_NANDF_ALE__GPIO6_IO08 0x80000000
 			>;
 		};
 
+		//Removendo conflitos
 		pinctrl_i2c3_egalax_int: egalax_i2c3_intgrp {
 			fsl,pins = <
-				MX6QDL_PAD_NANDF_CLE__GPIO6_IO07 0x80000000
 			>;
 		};
 
@@ -688,17 +671,15 @@
 			>;
 		};
 
+		//Removendo conflito
 		pinctrl_gpio_keys: gpio_keysgrp {
 			fsl,pins = <
-				MX6QDL_PAD_EIM_D29__GPIO3_IO29 0x1b0b0
-				MX6QDL_PAD_GPIO_4__GPIO1_IO04  0x1b0b0
-				MX6QDL_PAD_GPIO_5__GPIO1_IO05  0x1b0b0
 			>;
 		};
 
+		//Removendo conflitos
 		pinctrl_hdmi_cec: hdmicecgrp {
 			fsl,pins = <
-				MX6QDL_PAD_KEY_ROW2__HDMI_TX_CEC_LINE 0x108b0
 			>;
 		};
 
@@ -774,7 +755,6 @@
 				MX6QDL_PAD_CSI0_DAT17__IPU1_CSI0_DATA17    0x80000000
 				MX6QDL_PAD_CSI0_DAT18__IPU1_CSI0_DATA18    0x80000000
 				MX6QDL_PAD_CSI0_DAT19__IPU1_CSI0_DATA19    0x80000000
-				MX6QDL_PAD_CSI0_DATA_EN__IPU1_CSI0_DATA_EN 0x80000000
 				MX6QDL_PAD_CSI0_PIXCLK__IPU1_CSI0_PIXCLK   0x80000000
 				MX6QDL_PAD_CSI0_MCLK__IPU1_CSI0_HSYNC      0x80000000
 				MX6QDL_PAD_CSI0_VSYNC__IPU1_CSI0_VSYNC     0x80000000
@@ -783,15 +763,15 @@
 			>;
 		};
 
+		//Removendo conflito
 		pinctrl_pcie: pciegrp {
 			fsl,pins = <
-				MX6QDL_PAD_GPIO_17__GPIO7_IO12	0x1b0b0
 			>;
 		};
 
+		//Removendo conflito
 		pinctrl_pcie_reg: pciereggrp {
 			fsl,pins = <
-				MX6QDL_PAD_EIM_D19__GPIO3_IO19	0x1b0b0
 			>;
 		};
 
@@ -811,24 +791,18 @@
 		pinctrl_uart5_1: uart5grp-1 {
 			fsl,pins = <
 				MX6QDL_PAD_KEY_COL1__UART5_TX_DATA	0x1b0b1
-				MX6QDL_PAD_KEY_ROW1__UART5_RX_DATA	0x1b0b1
-				MX6QDL_PAD_KEY_COL4__UART5_RTS_B	0x1b0b1
-				MX6QDL_PAD_KEY_ROW4__UART5_CTS_B	0x1b0b1
 			>;
 		};
 
 		pinctrl_uart5dte_1: uart5dtegrp-1 {
 			fsl,pins = <
-				MX6QDL_PAD_KEY_ROW1__UART5_TX_DATA	0x1b0b1
 				MX6QDL_PAD_KEY_COL1__UART5_RX_DATA	0x1b0b1
-				MX6QDL_PAD_KEY_ROW4__UART5_RTS_B	0x1b0b1
-				MX6QDL_PAD_KEY_COL4__UART5_CTS_B	0x1b0b1
 			>;
 		};
 
+		//Removendo conflito
 		pinctrl_usbotg: usbotggrp {
 			fsl,pins = <
-				MX6QDL_PAD_ENET_RX_ER__USB_OTG_ID	0x17059
 			>;
 		};
 
@@ -877,17 +851,17 @@
 			>;
 		};
 
+		//Removendo conflito
 		pinctrl_wdog: wdoggrp {
 			fsl,pins = <
-				MX6QDL_PAD_GPIO_1__WDOG2_B 0x80000000
 			>;
 		};
 	};
 
 	gpio_leds {
+		//Removendo conflitos
 		pinctrl_gpio_leds: gpioledsgrp {
 			fsl,pins = <
-				MX6QDL_PAD_GPIO_2__GPIO1_IO02 0x1b0b0
 			>;
 		};
 	};
