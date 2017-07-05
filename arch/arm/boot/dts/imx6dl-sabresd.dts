@@ -184,8 +184,28 @@
         status = "okay";
 };
 
-//Troca de LVDS (LDB) para LCD
+//LVDS (ldb) habilitado
 &mxcfb1 {
+	status = "okay";
+};
+
+&ldb {
+	lvds-channel@0 {
+	        crtc = "ipu1-di0";
+	};
+
+	lvds-channel@1 {
+	        crtc = "ipu1-di1";
+	};
+};
+
+//Habilita HDMI
+&mxcfb2 {
+	status = "okay";
+};
+
+//Habilita LCD também
+&mxcfb3 {
         compatible = "fsl,mxc_sdc_fb";
         disp_dev = "lcd";
         interface_pix_fmt = "RGB24";
@@ -194,11 +214,6 @@
         int_clk = <0>;
         late_init = <0>;
         status = "okay";
-};
-
-//Habilita HDMI
-&mxcfb2 {
-	status = "okay";
 };
 
 //Configura LCD
