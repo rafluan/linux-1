@@ -67,6 +67,7 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
+		/*
 		reg_usb_otg_vbus: regulator@0 {
 			compatible = "regulator-fixed";
 			reg = <0>;
@@ -75,9 +76,10 @@
 			regulator-max-microvolt = <5000000>;
 			gpio = <&gpio3 22 0>;
 			enable-active-high;
-			vin-supply = <&swbst_reg>;
 		};
+		*/
 
+		/*
 		reg_usb_h1_vbus: regulator@1 {
 			compatible = "regulator-fixed";
 			reg = <1>;
@@ -88,6 +90,7 @@
 			enable-active-high;
 			vin-supply = <&swbst_reg>;
 		};
+		*/
 
 		reg_audio: regulator@2 {
 			compatible = "regulator-fixed";
@@ -97,6 +100,7 @@
 			enable-active-high;
 		};
 
+		/*
 		reg_pcie: regulator@3 {
 			compatible = "regulator-fixed";
 			reg = <3>;
@@ -109,6 +113,7 @@
 			regulator-always-on;
 			enable-active-high;
 		};
+		*/
 
 		reg_sensor: regulator@4 {
 			compatible = "regulator-fixed";
@@ -129,6 +134,7 @@
 		};
 	};
 
+	/*
 	gpio-keys {
 		compatible = "gpio-keys";
 		pinctrl-names = "default";
@@ -155,6 +161,7 @@
 			linux,code = <KEY_VOLUMEDOWN>;
 		};
 	};
+	*/
 
 	sound {
 		compatible = "fsl,imx6q-sabresd-wm8962",
@@ -231,6 +238,7 @@
 		status = "disabled";
 	};
 
+	/*
 	lcd: lcd@0 {
 		compatible = "fsl,lcd";
 		ipu_id = <0>;
@@ -240,6 +248,7 @@
 		pinctrl-0 = <&pinctrl_ipu1>;
 		status = "okay";
 	};
+	*/
 
 	backlight {
 		compatible = "pwm-backlight";
@@ -249,12 +258,14 @@
 		status = "okay";
 	};
 
+	//Removendo  Video4Linux capture
+	/*
 	v4l2_cap_0 {
 		compatible = "fsl,imx6q-v4l2-capture";
 		ipu_id = <0>;
 		csi_id = <0>;
 		mclk_source = <0>;
-		status = "okay";
+		status = "disabled";
 	};
 
 	v4l2_cap_1 {
@@ -262,14 +273,15 @@
 		ipu_id = <0>;
 		csi_id = <1>;
 		mclk_source = <0>;
-		status = "okay";
+		status = "disabled";
 	};
+
 
 	v4l2_out {
 		compatible = "fsl,mxc_v4l2_output";
-		status = "okay";
+		status = "disabled";
 	};
-
+	*/
 	mipi_dsi_reset: mipi-dsi-reset {
 		compatible = "gpio-reset";
 		reset-gpios = <&gpio6 11 GPIO_ACTIVE_LOW>;
@@ -285,8 +297,9 @@
 };
 
 &cpu0 {
-	arm-supply = <&sw1a_reg>;
-	soc-supply = <&sw1c_reg>;
+	//Removendo nodes relacionados ao PMIC
+	//arm-supply = <&sw1a_reg>;
+	//soc-supply = <&sw1c_reg>;
 };
 
 &clks {
@@ -339,11 +352,13 @@
 	status = "okay";
 };
 
+/*
 &hdmi_cec {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_hdmi_cec>;
 	status = "okay";
 };
+*/
 
 &hdmi_core {
 	ipu_id = <0>;
@@ -397,23 +412,6 @@
 		interrupt-route = <1>;
 	};
 
-	ov564x: ov564x@3c {
-		compatible = "ovti,ov564x";
-		reg = <0x3c>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_ipu1_2>;
-		clocks = <&clks IMX6QDL_CLK_CKO>;
-		clock-names = "csi_mclk";
-		DOVDD-supply = <&vgen4_reg>; /* 1.8v */
-		AVDD-supply = <&vgen3_reg>;  /* 2.8v, on rev C board is VGEN3,
-						on rev B board is VGEN5 */
-		DVDD-supply = <&vgen2_reg>;  /* 1.5v*/
-		pwn-gpios = <&gpio1 16 1>;   /* active low: SD1_DAT0 */
-		rst-gpios = <&gpio1 17 0>;   /* active high: SD1_DAT1 */
-		csi_id = <0>;
-		mclk = <24000000>;
-		mclk_source = <0>;
-	};
 };
 
 &i2c2 {
@@ -422,6 +420,7 @@
 	pinctrl-0 = <&pinctrl_i2c2>;
 	status = "okay";
 
+	/* Removendo TS, PMIC e MAX11801
 	egalax_ts@04 {
 		compatible = "eeti,egalax_ts";
 		reg = <0x04>;
@@ -431,15 +430,15 @@
 		interrupts = <8 2>;
 		wakeup-gpios = <&gpio6 8 GPIO_ACTIVE_HIGH>;
 	};
-
+	
 	max11801@48 {
 		compatible = "maxim,max11801";
 		reg = <0x48>;
 		interrupt-parent = <&gpio3>;
 		interrupts = <26 2>;
-		work-mode = <1>;/*DCM mode*/
+		work-mode = <1>; 
 	};
-
+	
 	pmic: pfuze100@08 {
 		compatible = "fsl,pfuze100";
 		reg = <0x08>;
@@ -539,27 +538,13 @@
 			};
 		};
 	};
+	*/
 
 	hdmi: edid@50 {
 		compatible = "fsl,imx6-hdmi-i2c";
 		reg = <0x50>;
 	};
 
-	ov564x_mipi: ov564x_mipi@3c { /* i2c2 driver */
-		compatible = "ovti,ov564x_mipi";
-		reg = <0x3c>;
-		clocks = <&clks 201>;
-		clock-names = "csi_mclk";
-		DOVDD-supply = <&vgen4_reg>; /* 1.8v */
-		AVDD-supply = <&vgen3_reg>;  /* 2.8v, rev C board is VGEN3
-						rev B board is VGEN5 */
-		DVDD-supply = <&vgen2_reg>;  /* 1.5v*/
-		pwn-gpios = <&gpio1 19 1>;   /* active low: SD1_CLK */
-		rst-gpios = <&gpio1 20 0>;   /* active high: SD1_DAT2 */
-		csi_id = <1>;
-		mclk = <24000000>;
-		mclk_source = <0>;
-	};
 };
 
 &i2c3 {
@@ -568,6 +553,7 @@
 	pinctrl-0 = <&pinctrl_i2c3>;
 	status = "okay";
 
+	/* Removendo TS
 	egalax_ts@04 {
 		compatible = "eeti,egalax_ts";
 		reg = <0x04>;
@@ -577,6 +563,7 @@
 		interrupts = <7 2>;
 		wakeup-gpios = <&gpio6 7 GPIO_ACTIVE_HIGH>;
 	};
+	*/
 
 	isl29023@44 {
 		compatible = "fsl,isl29023";
@@ -633,16 +620,20 @@
 		};
 
 		//Removendo conflitos
+		/*
 		pinctrl_i2c2_egalax_int: egalax_i2c2_intgrp {
 			fsl,pins = <
 			>;
 		};
+		*/
 
 		//Removendo conflitos
+		/*
 		pinctrl_i2c3_egalax_int: egalax_i2c3_intgrp {
 			fsl,pins = <
 			>;
 		};
+		*/
 
 		pinctrl_enet: enetgrp {
 			fsl,pins = <
@@ -672,16 +663,19 @@
 		};
 
 		//Removendo conflito
-		pinctrl_gpio_keys: gpio_keysgrp {
+		/*pinctrl_gpio_keys: gpio_keysgrp {
 			fsl,pins = <
 			>;
 		};
+		*/
 
 		//Removendo conflitos
+		/*
 		pinctrl_hdmi_cec: hdmicecgrp {
 			fsl,pins = <
 			>;
 		};
+		*/
 
 		pinctrl_hdmi_hdcp: hdmihdcpgrp {
 			fsl,pins = <
@@ -764,16 +758,20 @@
 		};
 
 		//Removendo conflito
+		/*
 		pinctrl_pcie: pciegrp {
 			fsl,pins = <
 			>;
 		};
+		*/
 
 		//Removendo conflito
+		/*
 		pinctrl_pcie_reg: pciereggrp {
 			fsl,pins = <
 			>;
 		};
+		*/
 
 		pinctrl_pwm1: pwm1grp {
 			fsl,pins = <
@@ -800,9 +798,11 @@
 			>;
 		};
 
-		//Removendo conflito
 		pinctrl_usbotg: usbotggrp {
 			fsl,pins = <
+				MX6QDL_PAD_KEY_COL0__GPIO4_IO06		0x17059
+                                MX6QDL_PAD_EIM_D21__USB_OTG_OC          0x1b0b0
+                                MX6QDL_PAD_EIM_D22__USB_OTG_PWR         0x1b0b0
 			>;
 		};
 
@@ -852,27 +852,34 @@
 		};
 
 		//Removendo conflito
+		/*
 		pinctrl_wdog: wdoggrp {
 			fsl,pins = <
 			>;
 		};
+		*/
 	};
 
+	//Removendo conflitos
+	/*
 	gpio_leds {
-		//Removendo conflitos
+		
 		pinctrl_gpio_leds: gpioledsgrp {
 			fsl,pins = <
 			>;
 		};
 	};
+	*/
 };
 
 &ldb {
 	status = "okay";
 
 	lvds-channel@0 {
+		crtc = "ipu0-di1";
 		fsl,data-mapping = "spwg";
 		fsl,data-width = <18>;
+		primary;
 		status = "okay";
 
 		display-timings {
@@ -891,6 +898,7 @@
 		};
 	};
 
+	/*
 	lvds-channel@1 {
 		fsl,data-mapping = "spwg";
 		fsl,data-width = <18>;
@@ -912,8 +920,10 @@
 			};
 		};
 	};
+	*/
 };
 
+/* Removendo conflitos
 &mipi_csi {
 	status = "okay";
 	ipu_id = <0>;
@@ -930,13 +940,16 @@
 	resets = <&mipi_dsi_reset>;
 	status = "okay";
 };
+*/
 
+/*
 &pcie {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_pcie>;
 	reset-gpio = <&gpio7 12 0>;
 	status = "okay";
 };
+*/
 
 &pwm1 {
 	pinctrl-names = "default";
@@ -959,12 +972,12 @@
 };
 
 &usbh1 {
-	vbus-supply = <&reg_usb_h1_vbus>;
+	//vbus-supply = <&reg_usb_h1_vbus>;
 	status = "okay";
 };
 
 &usbotg {
-	vbus-supply = <&reg_usb_otg_vbus>;
+	//vbus-supply = <&reg_usb_otg_vbus>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_usbotg>;
 	disable-over-current;
@@ -1020,9 +1033,11 @@
 	status = "disabled";
 };
 
+/*
 &wdog2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_wdog>;
 	fsl,wdog_b;
 	status = "okay";
 };
+*/

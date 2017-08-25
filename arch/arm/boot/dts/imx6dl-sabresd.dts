@@ -32,7 +32,6 @@
 				MX6QDL_PAD_EIM_D29__GPIO3_IO29		0x80000000
 				MX6QDL_PAD_EIM_D31__USB_H1_PWR		0x80000000
 				MX6QDL_PAD_EIM_BCLK__GPIO6_IO31		0x80000000
-				MX6QDL_PAD_KEY_COL0__GPIO4_IO06		0x80000000
 				MX6QDL_PAD_KEY_ROW0__GPIO4_IO07		0x80000000
 				MX6QDL_PAD_KEY_COL2__GPIO4_IO10		0x80000000
 				MX6QDL_PAD_KEY_ROW1__GPIO4_IO09		0x80000000
@@ -218,17 +217,6 @@
         default_bpp = <24>;
         int_clk = <0>;
         late_init = <0>;
-        status = "okay";
-};
-
-//Configura LCD
-&lcd {
-        compatible = "fsl,lcd";
-        ipu_id = <0>;
-        disp_id = <0>;
-        default_ifmt = "RGB24";
-        pinctrl-names = "default";
-        pinctrl-0 = <&pinctrl_ipu1>;
         status = "okay";
 };
 
