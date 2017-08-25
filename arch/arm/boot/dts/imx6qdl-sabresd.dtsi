@@ -1030,14 +1030,13 @@
 };
 
 &wdog1 {
-	status = "disabled";
+	status = "okay";
 };
 
-/*
-&wdog2 {
+//Removendo wdog2 para possibilitar reboot
+/*&wdog2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_wdog>;
 	fsl,wdog_b;
 	status = "okay";
-};
-*/
+};*/
