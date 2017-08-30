@@ -201,8 +201,8 @@
 		disp_dev = "ldb";
 		interface_pix_fmt = "RGB666";
 		default_bpp = <16>;
-		int_clk = <0>;
-		late_init = <0>;
+		int_clk = <1>;
+		late_init = <1>;
 		status = "disabled";
 	};
 
@@ -870,24 +870,7 @@
 	status = "okay";
 
 	lvds-channel@0 {
-		fsl,data-mapping = "spwg";
-		fsl,data-width = <18>;
-		status = "okay";
-
-		display-timings {
-			native-mode = <&timing0>;
-			timing0: hsd100pxn1 {
-				clock-frequency = <50000000>;
-				hactive = <800>;
-				vactive = <480>;
-				hback-porch = <5>;
-				hfront-porch = <5>;
-				vback-porch = <10>;
-				vfront-porch = <10>;
-				hsync-len = <5>;
-				vsync-len = <5>;
-			};
-		};
+		status = "disabled";
 	};
 
 	lvds-channel@1 {
@@ -897,17 +880,17 @@
 		status = "okay";
 
 		display-timings {
-			native-mode = <&timing1>;
-			timing1: hsd100pxn1 {
-				clock-frequency = <50000000>;
+			native-mode = <&timing0>;
+			timing0: hsd100pxn1 {
+				clock-frequency = <65000000>;
 				hactive = <800>;
 				vactive = <480>;
-				hback-porch = <5>;
-				hfront-porch = <5>;
-				vback-porch = <10>;
-				vfront-porch = <10>;
-				hsync-len = <5>;
-				vsync-len = <5>;
+				hback-porch = <220>;
+				hfront-porch = <40>;
+				vback-porch = <21>;
+				vfront-porch = <7>;
+				hsync-len = <60>;
+				vsync-len = <10>;
 			};
 		};
 	};
