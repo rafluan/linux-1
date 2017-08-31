@@ -21,19 +21,6 @@
 		mxcfb3 = &mxcfb4;
 	};
 
-	battery: max8903@0 {
-		compatible = "fsl,max8903-charger";
-		pinctrl-names = "default";
-		dok_input = <&gpio2 24 1>;
-		uok_input = <&gpio1 27 1>;
-		chg_input = <&gpio3 23 1>;
-		flt_input = <&gpio5 2 1>;
-		fsl,dcm_always_high;
-		fsl,dc_valid;
-		fsl,usb_valid;
-		status = "okay";
-	};
-
 	hannstar_cabc {
 		compatible = "hannstar,cabc";
 		lvds0 {
@@ -53,7 +40,7 @@
 
 		charger-led {
 			gpios = <&gpio1 2 0>;
-			linux,default-trigger = "max8903-charger-charging";
+			//linux,default-trigger = "max8903-charger-charging";
 			retain-state-suspended;
 		};
 	};
@@ -96,7 +83,7 @@
 			compatible = "regulator-fixed";
 			reg = <2>;
 			regulator-name = "wm8962-supply";
-			gpio = <&gpio4 10 0>;
+			//gpio = <&gpio4 10 0>;
 			enable-active-high;
 		};
 
@@ -307,7 +294,7 @@
 
 &ecspi1 {
 	fsl,spi-num-chipselects = <1>;
-	cs-gpios = <&gpio4 9 0>;
+	//cs-gpios = <&gpio4 9 0>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_ecspi1>;
 	status = "okay";
@@ -319,15 +306,6 @@
 		spi-max-frequency = <25000000>;
 		reg = <0>;
 	};
-};
-
-&fec {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_enet>;
-	phy-mode = "rgmii";
-	phy-reset-gpios = <&gpio1 25 0>;
-	fsl,magic-packet;
-	status = "okay";
 };
 
 &gpc {
@@ -635,22 +613,18 @@
 
 		pinctrl_enet: enetgrp {
 			fsl,pins = <
-				MX6QDL_PAD_ENET_MDIO__ENET_MDIO		0x1b0b0
-				MX6QDL_PAD_ENET_MDC__ENET_MDC		0x1b0b0
-				MX6QDL_PAD_RGMII_TXC__RGMII_TXC		0x1b0b0
-				MX6QDL_PAD_RGMII_TD0__RGMII_TD0		0x1b0b0
-				MX6QDL_PAD_RGMII_TD1__RGMII_TD1		0x1b0b0
-				MX6QDL_PAD_RGMII_TD2__RGMII_TD2		0x1b0b0
-				MX6QDL_PAD_RGMII_TD3__RGMII_TD3		0x1b0b0
-				MX6QDL_PAD_RGMII_TX_CTL__RGMII_TX_CTL	0x1b0b0
-				MX6QDL_PAD_ENET_REF_CLK__ENET_TX_CLK	0x1b0b0
-				MX6QDL_PAD_RGMII_RXC__RGMII_RXC		0x1b0b0
-				MX6QDL_PAD_RGMII_RD0__RGMII_RD0		0x1b0b0
-				MX6QDL_PAD_RGMII_RD1__RGMII_RD1		0x1b0b0
-				MX6QDL_PAD_RGMII_RD2__RGMII_RD2		0x1b0b0
-				MX6QDL_PAD_RGMII_RD3__RGMII_RD3		0x1b0b0
-				MX6QDL_PAD_RGMII_RX_CTL__RGMII_RX_CTL	0x1b0b0
-				MX6QDL_PAD_GPIO_16__ENET_REF_CLK	0x4001b0a8
+				MX6QDL_PAD_ENET_MDC__ENET_MDC           0x1b0b0
+                                MX6QDL_PAD_ENET_MDIO__ENET_MDIO         0x1b0b0
+                                MX6QDL_PAD_ENET_CRS_DV__ENET_RX_EN      0x1b0b0
+                                MX6QDL_PAD_ENET_RX_ER__ENET_RX_ER       0x1b0b0
+                                MX6QDL_PAD_ENET_TX_EN__ENET_TX_EN       0x1b0b0
+                                MX6QDL_PAD_ENET_RXD0__ENET_RX_DATA0     0x1b0b0
+                                MX6QDL_PAD_ENET_RXD1__ENET_RX_DATA1     0x1b0b0
+                                MX6QDL_PAD_ENET_TXD0__ENET_TX_DATA0     0x1b0b0
+                                MX6QDL_PAD_ENET_TXD1__ENET_TX_DATA1     0x1b0b0
+                                MX6QDL_PAD_GPIO_16__ENET_REF_CLK        0x4001b0a1
+                                MX6QDL_PAD_KEY_COL2__GPIO4_IO10         0x1b0b0
+                                MX6QDL_PAD_KEY_ROW1__GPIO4_IO09         0x1b0b0
 			>;
 		};
 

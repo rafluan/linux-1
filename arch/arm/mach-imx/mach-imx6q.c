@@ -60,6 +60,19 @@ static int ksz9021rn_phy_fixup(struct phy_device *phydev)
 	return 0;
 }
 
+static int ksz8081_phy_fixup(struct phy_device *dev)
+{
+        if (dev && dev->interface == PHY_INTERFACE_MODE_MII) {
+                phy_write(dev, 0x1f, 0x8100);
+                phy_write(dev, 0x16, 0x01);
+        } else if (dev && dev->interface == PHY_INTERFACE_MODE_RMII) {
+                phy_write(dev, 0x1f, 0x8180);
+                phy_write(dev, 0x16, 0x02);
+        }
+
+        return 0;
+}
+
 static void mmd_write_reg(struct phy_device *dev, int device, int reg, int val)
 {
 	phy_write(dev, 0x0d, device);
@@ -178,6 +191,8 @@ static int ar8035_phy_fixup(struct phy_device *dev)
 }
 
 #define PHY_ID_AR8035 0x004dd072
+#define PHY_ID_KSZ8081_MNRN60   0x00221560
+#define PHY_ID_KSZ8081_MNRN61   0x00221561
 
 static void __init imx6q_enet_phy_init(void)
 {
@@ -190,6 +205,8 @@ static void __init imx6q_enet_phy_init(void)
 				ar8031_phy_fixup);
 		phy_register_fixup_for_uid(PHY_ID_AR8035, 0xffffffef,
 				ar8035_phy_fixup);
+		phy_register_fixup(PHY_ANY_ID, PHY_ID_KSZ8081_MNRN60, 0xffffffff, ksz8081_phy_fixup);
+		phy_register_fixup(PHY_ANY_ID, PHY_ID_KSZ8081_MNRN61, 0xffffffff, ksz8081_phy_fixup);
 	}
 }
 
