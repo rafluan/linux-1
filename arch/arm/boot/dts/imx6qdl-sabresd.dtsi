@@ -38,10 +38,10 @@
 	leds {
 		compatible = "gpio-leds";
 
-		charger-led {
-			gpios = <&gpio1 2 0>;
-			//linux,default-trigger = "max8903-charger-charging";
-			retain-state-suspended;
+		// Adiciona lógica para ligar o backlight
+		backlight-led {
+			gpios = <&gpio1 9 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
 		};
 	};
 
@@ -173,7 +173,7 @@
 		mux-int-port = <2>;
 		mux-ext-port = <3>;
 		hp-det-gpios = <&gpio7 8 1>;
-		mic-det-gpios = <&gpio1 9 1>;
+		//mic-det-gpios = <&gpio1 9 1>;
 	};
 
 	sound-hdmi {
