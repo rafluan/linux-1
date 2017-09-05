@@ -79,14 +79,6 @@
 		};
 		*/
 
-		reg_audio: regulator@2 {
-			compatible = "regulator-fixed";
-			reg = <2>;
-			regulator-name = "wm8962-supply";
-			//gpio = <&gpio4 10 0>;
-			enable-active-high;
-		};
-
 		/*
 		reg_pcie: regulator@3 {
 			compatible = "regulator-fixed";
@@ -149,39 +141,6 @@
 		};
 	};
 	*/
-
-	sound {
-		compatible = "fsl,imx6q-sabresd-wm8962",
-			   "fsl,imx-audio-wm8962";
-		model = "wm8962-audio";
-		cpu-dai = <&ssi2>;
-		audio-codec = <&codec>;
-		asrc-controller = <&asrc>;
-		audio-routing =
-			"Headphone Jack", "HPOUTL",
-			"Headphone Jack", "HPOUTR",
-			"Ext Spk", "SPKOUTL",
-			"Ext Spk", "SPKOUTR",
-			"AMIC", "MICBIAS",
-			"IN3R", "AMIC",
-			"DMIC", "MICBIAS",
-			"DMICDAT", "DMIC",
-			"CPU-Playback", "ASRC-Playback",
-			"Playback", "CPU-Playback",
-			"ASRC-Capture", "CPU-Capture",
-			"CPU-Capture", "Capture";
-		mux-int-port = <2>;
-		mux-ext-port = <3>;
-		hp-det-gpios = <&gpio7 8 1>;
-		//mic-det-gpios = <&gpio1 9 1>;
-	};
-
-	sound-hdmi {
-		compatible = "fsl,imx6q-audio-hdmi",
-			     "fsl,imx-audio-hdmi";
-		model = "imx-audio-hdmi";
-		hdmi-controller = <&hdmi_audio>;
-	};
 
 	mxcfb1: fb@0 {
 		compatible = "fsl,mxc_sdc_fb";
@@ -326,10 +285,6 @@
 	status = "okay";
 };
 
-&hdmi_audio {
-	status = "okay";
-};
-
 /*
 &hdmi_cec {
 	pinctrl-names = "default";
@@ -355,40 +310,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c1>;
 	status = "okay";
-
-	codec: wm8962@1a {
-		compatible = "wlf,wm8962";
-		reg = <0x1a>;
-		clocks = <&clks IMX6QDL_CLK_CKO>;
-		DCVDD-supply = <&reg_audio>;
-		DBVDD-supply = <&reg_audio>;
-		AVDD-supply = <&reg_audio>;
-		CPVDD-supply = <&reg_audio>;
-		MICVDD-supply = <&reg_audio>;
-		PLLVDD-supply = <&reg_audio>;
-		SPKVDD1-supply = <&reg_audio>;
-		SPKVDD2-supply = <&reg_audio>;
-		gpio-cfg = <
-			0x0000 /* 0:Default */
-			0x0000 /* 1:Default */
-			0x0013 /* 2:FN_DMICCLK */
-			0x0000 /* 3:Default */
-			0x8014 /* 4:FN_DMICCDAT */
-			0x0000 /* 5:Default */
-		>;
-		amic-mono;
-       };
-
-	mma8451@1c {
-		compatible = "fsl,mma8451";
-		reg = <0x1c>;
-		position = <0>;
-		vdd-supply = <&reg_sensor>;
-		vddio-supply = <&reg_sensor>;
-		interrupt-parent = <&gpio1>;
-		interrupts = <18 8>;
-		interrupt-route = <1>;
-	};
 
 };
 
