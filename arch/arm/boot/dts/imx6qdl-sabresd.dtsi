@@ -188,8 +188,8 @@
 		disp_dev = "ldb";
 		interface_pix_fmt = "RGB666";
 		default_bpp = <16>;
-		int_clk = <1>;
-		late_init = <1>;
+		int_clk = <0>;
+		late_init = <0>;
 		status = "disabled";
 	};
 
