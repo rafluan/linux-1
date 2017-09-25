@@ -37,6 +37,14 @@ config UIO_PDRV_GENIRQ
 
 	  If you don't know what to do here, say N.
 
+config UIO_PCIE_GEN_MSI
+	tristate "Userspace I/O PCIe GEN MSI driver"
+	help
+	  Platform driver for Userspace PCIe I/O devices
+	  that supports one MSI interrupt.
+
+	  If you don't know what to do here, say N.
+
 config UIO_DMEM_GENIRQ
 	tristate "Userspace platform driver with generic irq and dynamic memory"
 	depends on HAS_DMA
