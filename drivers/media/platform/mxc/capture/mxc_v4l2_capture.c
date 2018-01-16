@@ -1824,15 +1824,16 @@ static int mxc_v4l_dqueue(cam_data *cam, struct v4l2_buffer *buf)
 	int retval = 0;
 	struct mxc_v4l_frame *frame;
 	unsigned long lock_flags;
+	int timeout = 15;
 
 	pr_debug("In MVC:mxc_v4l_dqueue\n");
 
 	if (!wait_event_interruptible_timeout(cam->enc_queue,
 					      cam->enc_counter != 0,
-					      10 * HZ)) {
-		pr_err("ERROR: v4l2 capture: mxc_v4l_dqueue timeout "
+					      timeout * HZ)) {
+		pr_err("ERROR: v4l2 capture: mxc_v4l_dqueue timeout (%d secs)"
 			"enc_counter %x\n",
-		       cam->enc_counter);
+		       timeout, cam->enc_counter);
 		return -ETIME;
 	} else if (signal_pending(current)) {
 		pr_err("ERROR: v4l2 capture: mxc_v4l_dqueue() "
