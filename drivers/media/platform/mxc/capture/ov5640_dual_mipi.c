@@ -1303,6 +1303,7 @@ static int ov5640_download_firmware(struct reg_value *pModeSetting, s32 ArySize)
 
 		if (Delay_ms)
 			msleep(Delay_ms);
+	msleep(50);	
 	}
 err:
 	return retval;
@@ -1493,7 +1494,7 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 
 	printk("ov5640_dual_mipi: ov5640_init_mode\n");
 
-	printk(KERN_ERR "ov5640_dual_mipi: %s() in %s: frame_rate = %d, 3 sec timeout\n", __func__, __FILE__, (int)frame_rate);
+	printk(KERN_ERR "ov5640_dual_mipi: %s() in %s: frame_rate = %d, 3 sec fix\n", __func__, __FILE__, (int)frame_rate);
 	printk(KERN_ERR "ov5640_dual_mipi: %s() in %s: mode = %d\n", __func__, __FILE__, (int)mode);
 
 	if ((mode > ov5640_mode_MAX || mode < ov5640_mode_MIN)
