@@ -105,12 +105,14 @@
 			enable-active-high;
 		};
 
+		/*
 		reg_mipi_dsi_pwr_on: mipi_dsi_pwr_on {
 			compatible = "regulator-fixed";
 			regulator-name = "mipi_dsi_pwr_on";
 			gpio = <&gpio6 14 0>;
 			enable-active-high;
 		};
+		*/
 	};
 
 	/*
@@ -225,20 +227,22 @@
 		compatible = "fsl,mxc_v4l2_output";
 		status = "disabled";
 	};
-	*/
 	mipi_dsi_reset: mipi-dsi-reset {
 		compatible = "gpio-reset";
 		reset-gpios = <&gpio6 11 GPIO_ACTIVE_LOW>;
 		reset-delay-us = <50>;
 		#reset-cells = <0>;
 	};
+	*/
 };
 
+/*
 &audmux {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_audmux>;
 	status = "okay";
 };
+*/
 
 &cpu0 {
 	//Removendo nodes relacionados ao PMIC
@@ -488,23 +492,47 @@
 			>;
 		};
 
-		pinctrl_ipu1_2: ipu1grp-2 { /* parallel camera */
+		pinctrl_ipu1_csi0: ipu1grp-csi0 { /* parallel camera */
 			fsl,pins = <
-				MX6QDL_PAD_CSI0_DAT12__IPU1_CSI0_DATA12    0x80000000
-				MX6QDL_PAD_CSI0_DAT13__IPU1_CSI0_DATA13    0x80000000
-				MX6QDL_PAD_CSI0_DAT14__IPU1_CSI0_DATA14    0x80000000
-				MX6QDL_PAD_CSI0_DAT15__IPU1_CSI0_DATA15    0x80000000
-				MX6QDL_PAD_CSI0_DAT16__IPU1_CSI0_DATA16    0x80000000
-				MX6QDL_PAD_CSI0_DAT17__IPU1_CSI0_DATA17    0x80000000
-				MX6QDL_PAD_CSI0_DAT18__IPU1_CSI0_DATA18    0x80000000
-				MX6QDL_PAD_CSI0_DAT19__IPU1_CSI0_DATA19    0x80000000
-				MX6QDL_PAD_CSI0_PIXCLK__IPU1_CSI0_PIXCLK   0x80000000
-				MX6QDL_PAD_CSI0_MCLK__IPU1_CSI0_HSYNC      0x80000000
-				MX6QDL_PAD_CSI0_VSYNC__IPU1_CSI0_VSYNC     0x80000000
-				MX6QDL_PAD_SD1_DAT1__GPIO1_IO17            0x80000000
-				MX6QDL_PAD_SD1_DAT0__GPIO1_IO16            0x80000000
+				MX6QDL_PAD_EIM_A17__IPU1_CSI1_DATA12    0xb0b1
+				MX6QDL_PAD_EIM_A18__IPU1_CSI1_DATA13    0xb0b1
+				MX6QDL_PAD_EIM_A19__IPU1_CSI1_DATA14    0xb0b1
+				MX6QDL_PAD_EIM_A20__IPU1_CSI1_DATA15    0xb0b1
+				MX6QDL_PAD_EIM_A21__IPU1_CSI1_DATA16    0xb0b1
+				MX6QDL_PAD_EIM_A22__IPU1_CSI1_DATA17    0xb0b1
+				MX6QDL_PAD_EIM_A23__IPU1_CSI1_DATA18    0xb0b1
+				MX6QDL_PAD_EIM_A24__IPU1_CSI1_DATA19    0xb0b1
+				MX6QDL_PAD_EIM_D17__IPU1_CSI1_PIXCLK    0xb0b1
+				MX6QDL_PAD_EIM_EB3__IPU1_CSI1_HSYNC     0xb0b1
+				MX6QDL_PAD_EIM_D29__IPU1_CSI1_VSYNC     0xb0b1
+
+				MX6QDL_PAD_SD4_DAT1__GPIO2_IO09         0x40		/* disabled PWM pins on camera IF */
+				MX6QDL_PAD_GPIO_1__GPIO1_IO01		0x40
 			>;
 		};
+		pinctrl_cam_mclk: camgrp_mclk { /* parallel camera */
+			fsl,pins = <
+				MX6QDL_PAD_NANDF_CS2__CCM_CLKO2         0x00b0		/* CAM sys_mclk */
+			>;
+		};
+
+//		pinctrl_ipu1_2: ipu1grp-2 { /* parallel camera */
+//			fsl,pins = <
+//				MX6QDL_PAD_CSI0_DAT12__IPU1_CSI0_DATA12    0x80000000
+//				MX6QDL_PAD_CSI0_DAT13__IPU1_CSI0_DATA13    0x80000000
+//				MX6QDL_PAD_CSI0_DAT14__IPU1_CSI0_DATA14    0x80000000
+//				MX6QDL_PAD_CSI0_DAT15__IPU1_CSI0_DATA15    0x80000000
+//				MX6QDL_PAD_CSI0_DAT16__IPU1_CSI0_DATA16    0x80000000
+//				MX6QDL_PAD_CSI0_DAT17__IPU1_CSI0_DATA17    0x80000000
+//				MX6QDL_PAD_CSI0_DAT18__IPU1_CSI0_DATA18    0x80000000
+//				MX6QDL_PAD_CSI0_DAT19__IPU1_CSI0_DATA19    0x80000000
+//				MX6QDL_PAD_CSI0_PIXCLK__IPU1_CSI0_PIXCLK   0x80000000
+//				MX6QDL_PAD_CSI0_MCLK__IPU1_CSI0_HSYNC      0x80000000
+//				MX6QDL_PAD_CSI0_VSYNC__IPU1_CSI0_VSYNC     0x80000000
+//				MX6QDL_PAD_SD1_DAT1__GPIO1_IO17            0x80000000
+//				MX6QDL_PAD_SD1_DAT0__GPIO1_IO16            0x80000000
+//			>;
+//		};
 
 		//Removendo conflito
 		/*
