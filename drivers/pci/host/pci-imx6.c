@@ -60,7 +60,7 @@ struct imx6_pcie {
 	u32 			ext_osc;
 	int			dis_gpio;
 	int			power_on_gpio;
-	int			reset_gpio;
+	int			reset_gpio[4];
 	bool			gpio_active_high;
 	struct clk		*pcie_bus;
 	struct clk		*pcie_inbound_axi;
@@ -416,7 +416,7 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
 {
 	struct pcie_port *pp = &imx6_pcie->pp;
 	struct device *dev = pp->dev;
-	int ret;
+	int ret, i;
 	u32 val;
 
 	if (gpio_is_valid(imx6_pcie->power_on_gpio))
@@ -531,13 +531,14 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
 	}
 
 	/* Some boards don't have PCIe reset GPIO. */
-	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
-					imx6_pcie->gpio_active_high);
-		mdelay(20);
-		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
-					!imx6_pcie->gpio_active_high);
-		mdelay(20);
+	for (i = 0; i < ARRAY_SIZE(imx6_pcie->reset_gpio); i++) {
+		if (gpio_is_valid(imx6_pcie->reset_gpio[i])) {
+			gpio_set_value_cansleep(imx6_pcie->reset_gpio[i],
+						imx6_pcie->gpio_active_high);
+			msleep(100);
+			gpio_set_value_cansleep(imx6_pcie->reset_gpio[i],
+						!imx6_pcie->gpio_active_high);
+		}
 	}
 
 	return;
@@ -1033,6 +1034,8 @@ static void imx6_pcie_setup_ep(struct pcie_port *pp)
 /* PM_TURN_OFF */
 static void pci_imx_pm_turn_off(struct imx6_pcie *imx6_pcie)
 {
+	int i;
+
 	/* PM_TURN_OFF */
 	if (imx6_pcie->variant == IMX7D) {
 		regmap_update_bits(imx6_pcie->reg_src, 0x2c,
@@ -1057,8 +1060,9 @@ static void pci_imx_pm_turn_off(struct imx6_pcie *imx6_pcie)
 	}
 
 	udelay(1000);
-	if (gpio_is_valid(imx6_pcie->reset_gpio))
-		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+	for (i = 0; i < ARRAY_SIZE(imx6_pcie->reset_gpio); i++)
+		if (gpio_is_valid(imx6_pcie->reset_gpio[i]))
+			gpio_set_value_cansleep(imx6_pcie->reset_gpio[i], 0);
 }
 
 static int pci_imx_suspend_noirq(struct device *dev)
@@ -1189,7 +1193,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
 	struct device_node *np;
 	struct resource *dbi_base;
 	struct device_node *node = dev->of_node;
-	int ret;
+	int ret, i;
 
 	imx6_pcie = devm_kzalloc(dev, sizeof(*imx6_pcie), GFP_KERNEL);
 	if (!imx6_pcie)
@@ -1237,21 +1241,19 @@ static int imx6_pcie_probe(struct platform_device *pdev)
 		}
 	}
 
-	imx6_pcie->reset_gpio = of_get_named_gpio(node, "reset-gpio", 0);
-	imx6_pcie->gpio_active_high = of_property_read_bool(node,
-						"reset-gpio-active-high");
-	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-		ret = devm_gpio_request_one(dev, imx6_pcie->reset_gpio,
-				imx6_pcie->gpio_active_high ?
-					GPIOF_OUT_INIT_HIGH :
-					GPIOF_OUT_INIT_LOW,
-				"PCIe reset");
-		if (ret) {
-			dev_err(dev, "unable to get reset gpio\n");
-			return ret;
+	for (i = 0; i < ARRAY_SIZE(imx6_pcie->reset_gpio); i++) {
+		imx6_pcie->reset_gpio[i] = of_get_named_gpio(node, "reset-gpio", i);
+		if (gpio_is_valid(imx6_pcie->reset_gpio[i])) {
+			ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio[i],
+					imx6_pcie->gpio_active_high ?
+						GPIOF_OUT_INIT_HIGH :
+						GPIOF_OUT_INIT_LOW,
+					"PCIe reset");
+			if (ret) {
+				dev_err(&pdev->dev, "unable to get reset gpio\n");
+				return ret;
+			}
 		}
-	} else if (imx6_pcie->reset_gpio == -EPROBE_DEFER) {
-		return imx6_pcie->reset_gpio;
 	}
 
 	/* Fetch clocks */
