@@ -15,6 +15,11 @@
 	model = "Faro i.MX6 module";
 	compatible = "faro,imx6q-smx6", "fsl,imx6q";
 
+	aliases {
+		mmc0 = &usdhc4;
+		mmc2 = &usdhc3;
+	};
+
 	memory@10000000 {
 		reg = <0x10000000 0x40000000>;
 	};
