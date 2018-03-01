@@ -92,6 +92,22 @@
 		#size-cells = <0>;
 		i2c-gpio,delay-us = <2>;
 	};
+
+	v4l2_cap_1 {
+	    compatible = "fsl,imx6q-v4l2-capture";
+	    ipu_id = <0>;	/* MIPI camera */
+	    csi_id = <1>;	/* MIPI or parallel camera */
+	    mclk_source = <0>;
+	    status = "okay";
+	};
+
+	v4l2_cap_0 {
+	    compatible = "fsl,imx6q-v4l2-capture";
+	    ipu_id = <1>;	/* parallel camera */
+	    csi_id = <1>;	/* MIPI or parallel camera */
+	    mclk_source = <0>;
+	    status = "okay";
+	};
 };
 
 &can1 {
@@ -243,6 +259,53 @@
 	status = "okay";
 };
 
+
+&smarc_i2c_cam {
+/*
+ *	Cypher parallel camera: hw connected to IPU2/CSI1 => ipu_id=1, csi_id=1
+ *	Cypher MIPI camera:       configure for IPU1/CSI1 => ipu_id=0, csi_id=1
+ */
+	ov5640_mipi: ov5640_mipi@3c { /* i2c2 driver */
+		compatible = "ovti,ov5640_dual_mipi";
+		reg = <0x3c>;
+		bcast = <0x3e>;
+		clocks = <&clks 169>;	/* cko1 */
+		clock-names = "csi_mclk";
+		pwn1-gpios = <&gpio3 0 1>;   /* active high: GPIO03_IO00 (SMARC GPIO0) */
+		rst1-gpios = <&gpio3 2 0>;   /* active low: GPIO03_IO02 (SMARC GPIO2) */
+		pwn2-gpios = <&gpio3 1 1>;   /* active high: GPIO03_IO01 (SMARC GPIO1) */
+		rst2-gpios = <&gpio3 3 0>;   /* active low: GPIO03_IO03 (SMARC GPIO3) */
+		csi_id = <1>;
+		ipu_id = <0>;
+		vc = <1>;
+		mclk = <24000000>;
+		mclk_source = <0>;
+		status = "okay";
+	};
+
+	ov5640: ov5640@30 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_ov5640_csi1>;
+		compatible = "ovti,ov5640_dummy";
+		reg = <0x30>;
+		clocks = <&clks 169>;	/* cko1 */
+		clock-names = "csi_mclk";
+		csi_id = <1>;
+		ipu_id = <1>;
+		mclk = <24000000>;
+		mclk_source = <0>;
+		status = "okay";
+	};
+};
+
+&mipi_csi {
+	status = "okay";
+	ipu_id = <0>;
+	csi_id = <1>;
+	v_channel = <0>;
+	lanes = <2>;
+};
+
 &iomuxc {
 	pinctrl_i2c3: i2c3grp {
 		fsl,pins = <
@@ -309,6 +372,23 @@
 			MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x80000000
 			/* LID# */
 			MX6QDL_PAD_EIM_WAIT__GPIO5_IO00		0x80000000
+		>;
+	};
+
+	pinctrl_ov5640_csi1: ov5640_csi1 {
+		fsl,pins = <
+			MX6QDL_PAD_EIM_A17__IPU2_CSI1_DATA12 0x0001B0B0
+			MX6QDL_PAD_EIM_A18__IPU2_CSI1_DATA13 0x0001B0B0
+			MX6QDL_PAD_EIM_A19__IPU2_CSI1_DATA14 0x0001B0B0
+			MX6QDL_PAD_EIM_A20__IPU2_CSI1_DATA15 0x0001B0B0
+			MX6QDL_PAD_EIM_A21__IPU2_CSI1_DATA16 0x0001B0B0
+			MX6QDL_PAD_EIM_A22__IPU2_CSI1_DATA17 0x0001B0B0
+			MX6QDL_PAD_EIM_A23__IPU2_CSI1_DATA18 0x0001B0B0
+			MX6QDL_PAD_EIM_A24__IPU2_CSI1_DATA19 0x0001B0B0
+			MX6QDL_PAD_EIM_D23__IPU2_CSI1_DATA_EN 0x0001B0B0
+			MX6QDL_PAD_EIM_EB3__IPU2_CSI1_HSYNC 0x0001B0B0
+			MX6QDL_PAD_EIM_DA12__IPU2_CSI1_VSYNC 0x0001B0B0
+			MX6QDL_PAD_EIM_D17__IPU2_CSI1_PIXCLK 0x0001B0B0
 		>;
 	};
 
