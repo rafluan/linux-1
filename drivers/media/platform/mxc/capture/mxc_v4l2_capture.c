@@ -46,6 +46,10 @@
 
 #define init_MUTEX(sem)         sema_init(sem, 1)
 
+#define V4L2_CID_DRIVER_BASE		(V4L2_CID_USER_BASE | 0x1001)
+#define V4L2_CID_GET_REGISTER		(V4L2_CID_DRIVER_BASE + 2)
+#define V4L2_CID_SET_REGISTER		(V4L2_CID_DRIVER_BASE + 3)
+
 static struct platform_device_id imx_v4l2_devtype[] = {
 	{
 		.name = "v4l2-capture-imx5",
@@ -1260,6 +1264,15 @@ static int mxc_v4l2_s_ctrl(cam_data *cam, struct v4l2_control *c)
 		pr_debug("   default case\n");
 		ret = -EINVAL;
 		break;
+	case V4L2_CID_GET_REGISTER:
+	case V4L2_CID_SET_REGISTER:
+		if (cam->sensor) {
+			ret = vidioc_int_s_ctrl(cam->sensor, c);
+		} else {
+			pr_err("ERROR: v4l2 capture: slave not found!\n");
+			ret = -ENODEV;
+		}
+		break;
 	}
 
 	return ret;
@@ -1581,6 +1594,9 @@ static int mxc_v4l_open(struct file *file)
 			"cam_data not found!\n");
 		return -EBADF;
 	}
+
+	printk("%s(): LINE %d: cam->sensor is 0x%08x \n",__func__,__LINE__,(unsigned int)cam->sensor);
+	if(cam->sensor!=NULL) printk("%s(): LINE %d: cam->sensor->type is %d \n",__func__,__LINE__,cam->sensor->type);
 
 	if (cam->sensor == NULL ||
 	    cam->sensor->type != v4l2_int_type_slave) {
@@ -2813,10 +2829,12 @@ static int mxc_v4l2_probe(struct platform_device *pdev)
 	pdev->dev.release = camera_platform_release;
 
 	/* Set up the v4l2 device and register it*/
+	printk("%s(): %d:  Set up the v4l2 device and register it. \n",__func__,__LINE__);
 	cam->self->priv = cam;
 	v4l2_int_device_register(cam->self);
 
 	/* register v4l video device */
+	printk("%s(): %d:  register v4l video device \n",__func__,__LINE__);
 	if (video_register_device(cam->video_dev, VFL_TYPE_GRABBER, video_nr)
 		< 0) {
 		kfree(cam);
@@ -2825,6 +2843,8 @@ static int mxc_v4l2_probe(struct platform_device *pdev)
 		return -1;
 	}
 	pr_debug("   Video device registered: %s #%d\n",
+		 cam->video_dev->name, cam->video_dev->minor);
+	printk("   Video device registered: %s #%d\n",
 		 cam->video_dev->name, cam->video_dev->minor);
 
 	if (device_create_file(&cam->video_dev->dev,
