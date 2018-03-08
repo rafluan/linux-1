@@ -206,36 +206,18 @@
 		status = "okay";
 	};
 
-	//Removendo  Video4Linux capture
-	/*
 	v4l2_cap_0 {
-		compatible = "fsl,imx6q-v4l2-capture";
-		ipu_id = <0>;
-		csi_id = <0>;
-		mclk_source = <0>;
-		status = "disabled";
-	};
-
-	v4l2_cap_1 {
-		compatible = "fsl,imx6q-v4l2-capture";
-		ipu_id = <0>;
-		csi_id = <1>;
-		mclk_source = <0>;
-		status = "disabled";
-	};
-
+                compatible = "fsl,imx6q-v4l2-capture";
+                ipu_id = <0>;
+                csi_id = <1>;
+                mclk_source = <0>;
+                status = "okay";
+        };
 
 	v4l2_out {
 		compatible = "fsl,mxc_v4l2_output";
-		status = "disabled";
+		status = "okay";
 	};
-	mipi_dsi_reset: mipi-dsi-reset {
-		compatible = "gpio-reset";
-		reset-gpios = <&gpio6 11 GPIO_ACTIVE_LOW>;
-		reset-delay-us = <50>;
-		#reset-cells = <0>;
-	};
-	*/
 };
 
 /*
@@ -475,9 +457,10 @@
 				MX6QDL_PAD_EIM_D28__GPIO3_IO28          0x40      //VD_nRESET
 			>;
 		};
+		//Este pino não é usado como clock no display
+		//MX6QDL_PAD_NANDF_CS2__CCM_CLKO2         0x00b0		/* CAM sys_mclk */
 		pinctrl_cam_mclk: camgrp_mclk { /* parallel camera */
 			fsl,pins = <
-				MX6QDL_PAD_NANDF_CS2__CCM_CLKO2         0x00b0		/* CAM sys_mclk */
 			>;
 		};
 
