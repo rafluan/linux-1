@@ -32,6 +32,8 @@
 
 &cpu0 {
 	cpu-supply = <&vdd_core>;
+	/delete-property/dynamic-power-coefficient;
+	/delete-property/operating-points-v2;
 };
 
 &emmc {
