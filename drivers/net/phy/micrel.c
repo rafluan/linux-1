@@ -841,6 +841,25 @@ static int ksz8873mll_config_aneg(struct phy_device *phydev)
 	return 0;
 }
 
+#define KSZ886X_PM_LED_MODE		0xc3
+#define KSZ886X_PM_MODE_MASK		0x3
+#define KSZ886X_ENERGY_DETECTION_MODE	0x1
+
+static int ksz886x_config_init(struct phy_device *phydev)
+{
+	int regval, ret;
+
+	/* Enable Energy Detection Mode */
+	regval = phy_read(phydev, KSZ886X_PM_LED_MODE);
+	regval &= ~KSZ886X_PM_MODE_MASK;
+	regval |= KSZ886X_ENERGY_DETECTION_MODE;
+	ret = phy_write(phydev, KSZ886X_PM_LED_MODE, regval);
+	if (ret < 0)
+		return ret;
+
+	return kszphy_config_init(phydev);
+}
+
 static int kszphy_get_sset_count(struct phy_device *phydev)
 {
 	return ARRAY_SIZE(kszphy_hw_stats);
@@ -1170,7 +1189,7 @@ static struct phy_driver ksphy_driver[] = {
 	.phy_id_mask	= MICREL_PHY_ID_MASK,
 	.name		= "Micrel KSZ886X Switch",
 	/* PHY_BASIC_FEATURES */
-	.config_init	= kszphy_config_init,
+	.config_init	= ksz886x_config_init,
 	.suspend	= genphy_suspend,
 	.resume		= genphy_resume,
 }, {
