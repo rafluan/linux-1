@@ -84,6 +84,7 @@ static void dwc2_set_rk_params(struct dwc2_hsotg *hsotg)
 	struct dwc2_core_params *p = &hsotg->params;
 
 	p->lpm = false;
+	p->lpm_clock_gating = false;
 	p->besl = false;
 	p->hird_threshold_en = false;
 	p->otg_cap = DWC2_CAP_PARAM_NO_HNP_SRP_CAPABLE;
