@@ -282,11 +282,6 @@
 	pinctrl-0 = <&pinctrl_i2c2_2>;
 	status = "okay";
 
-	hdmi_edid: edid@50 {
-		compatible = "fsl,imx6-hdmi-i2c";
-		reg = <0x50>;
-	};
-
 	codec: tlv320aic3x@1b {
 		compatible = "ti,tlv320aic3x";
 		reg = <0x1b>;
@@ -408,6 +403,11 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c3_3>;
 	status = "okay";
+
+    hdmi_edid: edid@50 {
+		compatible = "fsl,imx6-hdmi-i2c";
+		reg = <0x50>;
+	};
 
 	/* DS1337 RTC module */
 	rtc@0x68 {
