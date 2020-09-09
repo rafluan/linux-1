@@ -609,8 +609,9 @@
 				MX6QDL_PAD_SD3_DAT1__SD3_DATA1		0x17069
 				MX6QDL_PAD_SD3_DAT2__SD3_DATA2		0x17069
 				MX6QDL_PAD_SD3_DAT3__SD3_DATA3		0x17069
-				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x13059   /* Reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
-				MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x13059   /* this is for wl_irq which driver will configure as an input with a pull down */
+				#define GPIRQ_WL1271	<&gpio6 17 IRQ_TYPE_LEVEL_HIGH>
+				MX6QDL_PAD_SD3_DAT7__GPIO6_IO17		0x130F9	  /* reserve two pins from sd1 for wl8 gpio, this is pulled low at reset for WL_EN */
+				MX6QDL_PAD_SD3_RST__GPIO7_IO08		0x130F9	  /* this is for wl_irq which driver will configure as an input with a pull down */
 			>;
 		};
 
@@ -829,27 +830,24 @@
 	status = "okay";
 };
 
-&usdhc3 {	/* uSDHC3, TiWi wl1271 7 Wilink8 WL18xx*/
+&usdhc3 {	/* uSDHC3, TiWi wl1271 */
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
 	pinctrl-0 = <&pinctrl_usdhc3_2>;
 	pinctrl-1 = <&pinctrl_usdhc3_2_100mhz>;
 	pinctrl-2 = <&pinctrl_usdhc3_2_200mhz>;
-	keep-power-in-suspend;
-	enable-sdio-wakeup;
-	vmmc-supply = <&wlan_en_reg>;
 	bus-width = <4>;
 	non-removable;
+	vmmc-supply = <&wlan_en_reg>;
+	vqmmc-1-8-v;
 	cap-power-off-card;
+	keep-power-in-suspend;
 	status = "okay";
 	#address-cells = <1>;
 	#size-cells = <0>;
-	wlcore: wlcore@0 {
-		compatible = "ti,wl1835";
+	wlcore: wlcore@2 {
+		compatible = "ti,wl1271";
+		interrupts-extended = GPIRQ_WL1271;
 		reg = <2>;
-		interrupt-parent = <&gpio6>;
-		interrupts = <17 IRQ_TYPE_EDGE_RISING>;
-
-		/* if a 12xx card is there, configure the clock to WL12XX_REFCLOCK_38_XTAL */
 		ref-clock-frequency = <38400000>;
 	};
 };
