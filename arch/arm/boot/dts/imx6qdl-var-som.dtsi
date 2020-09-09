@@ -409,9 +409,9 @@
 		reg = <0x50>;
 	};
 
-	/* DS1337 RTC module */
+	/* DS1672 RTC module */
 	rtc@0x68 {
-		compatible = "dallas,ds1337";
+		compatible = "dallas,ds1672";
 		reg = <0x68>;
 	};
 };
