@@ -771,17 +771,10 @@
 		label = "bootloader";
 		reg = <0x00200000 0x00200000>;
 	};
-
-	/* an 8 MiB partition */
+	/* a 508 MiB partition */
 	partition@2 {
-		label = "kernel";
-		reg = <0x00400000 0x00800000>;
-	};
-
-	/* a 1012 MiB partition */
-	partition@3 {
 		label = "rootfs";
-		reg = <0x00c00000 0x3f400000>;
+		reg = <0x00400000 0x1FC00000>;
 	};
 };
 
