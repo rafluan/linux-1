@@ -396,6 +396,12 @@
 			};
 		};
 	};
+
+	/* DS1672 RTC module */
+	rtc@0x68 {
+		compatible = "dallas,ds1672";
+		reg = <0x68>;
+	};
 };
 
 &i2c3 {
@@ -407,12 +413,6 @@
     hdmi_edid: edid@50 {
 		compatible = "fsl,imx6-hdmi-i2c";
 		reg = <0x50>;
-	};
-
-	/* DS1672 RTC module */
-	rtc@0x68 {
-		compatible = "dallas,ds1672";
-		reg = <0x68>;
 	};
 };
 
