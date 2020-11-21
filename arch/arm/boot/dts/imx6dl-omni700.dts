@@ -17,6 +17,11 @@
 		mmc0 = &usdhc4;
 	};
 
+	memory@10000000 {
+		device_type = "memory";
+		reg = <0x10000000 0x40000000>;
+	};
+
 	backlight_lvds: backlight-lvds {
 		compatible = "pwm-backlight";
 		pwms = <&pwm1 0 5000000>;
