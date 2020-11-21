@@ -3218,6 +3218,9 @@ static const struct of_device_id platform_of_match[] = {
 		.compatible = "edt,etm0700g0edh6",
 		.data = &edt_etm0700g0bdh6,
 	}, {
+		.compatible = "edt,et070wblg3",
+		.data = &edt_etm0700g0dh6,
+	}, {
 		.compatible = "evervision,vgg804821",
 		.data = &evervision_vgg804821,
 	}, {
