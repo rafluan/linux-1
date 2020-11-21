@@ -45,6 +45,23 @@
 	};
 };
 
+&i2c3 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c3>;
+	status = "okay";
+
+	touchscreen@14 {
+		compatible = "goodix,gt911";
+		reg = <0x14>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_ts>;
+		interrupt-parent = <&gpio6>;
+		interrupts = <31 IRQ_TYPE_EDGE_FALLING>;
+		irq-gpios = <&gpio6 31 GPIO_ACTIVE_HIGH>;
+	};
+};
+
 &ldb {
 	status = "okay";
 
@@ -92,6 +109,13 @@
 };
 
 &iomuxc {
+	pinctrl_i2c3: i2c3grp {
+		fsl,pins = <
+			MX6QDL_PAD_GPIO_3__I2C3_SCL		0x4001b8b1
+			MX6QDL_PAD_GPIO_6__I2C3_SDA		0x4001b8b1
+		>;
+	};
+
 	pinctrl_lcd_enable: lcdenablegrp {
 		fsl,pins = <
 			MX6QDL_PAD_KEY_ROW0__GPIO4_IO07		0x1b0b0
@@ -103,6 +127,13 @@
 			MX6QDL_PAD_GPIO_9__PWM1_OUT		0x1b0b1
 		>;
 	};
+
+	pinctrl_ts: tsgrp {
+		fsl,pins = <
+			MX6QDL_PAD_EIM_BCLK__GPIO6_IO31		0x1b0b0
+		>;
+	};
+
 
 	pinctrl_uart3: uart3grp {
 		fsl,pins = <
