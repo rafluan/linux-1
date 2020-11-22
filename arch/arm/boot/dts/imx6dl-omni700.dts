@@ -31,6 +31,11 @@
 		status = "okay";
 	};
 
+	buzzer {
+		compatible = "pwm-beeper";
+		pwms = <&pwm2 0 5000000>;
+	};
+
 	panel {
 		compatible = "edt,et070wblg3";
 		backlight = <&backlight_lvds>;
@@ -94,6 +99,13 @@
 	status = "okay";
 };
 
+&pwm2 {
+	#pwm-cells = <2>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_pwm2>;
+	status = "okay";
+};
+
 &uart3 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart3>;
@@ -146,6 +158,12 @@
 	pinctrl_pwm1: pwm1grp {
 		fsl,pins = <
 			MX6QDL_PAD_GPIO_9__PWM1_OUT		0x1b0b1
+		>;
+	};
+
+	pinctrl_pwm2: pwm2grp {
+		fsl,pins = <
+			MX6QDL_PAD_GPIO_1__PWM2_OUT		0x1b0b1
 		>;
 	};
 
