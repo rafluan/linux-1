@@ -68,6 +68,31 @@
 	status = "okay";
 };
 
+&fec {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_enet>;
+	phy-mode = "rmii";
+	phy-handle = <&ethphy0>;
+	status = "okay";
+
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		reset-delay-us = <10000>;
+		reset-post-delay-us = <100>;
+		reset-gpios = <&gpio4 9 GPIO_ACTIVE_LOW>;
+
+		/* Microchip/Micrel KSZ8081RNB */
+		ethphy0: ethernet-phy@1 {
+			reg = <1>;
+			clocks = <&clks IMX6QDL_CLK_ENET_REF>;
+			clock-names = "rmii-ref";
+		};
+	};
+};
+
 &i2c2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c2>;
@@ -169,6 +194,22 @@
 };
 
 &iomuxc {
+	pinctrl_enet: enetgrp {
+		fsl,pins = <
+			MX6QDL_PAD_ENET_MDC__ENET_MDC		0x1b0b0
+			MX6QDL_PAD_ENET_MDIO__ENET_MDIO		0x1b0b0
+			MX6QDL_PAD_ENET_CRS_DV__ENET_RX_EN	0x1b0b0
+			MX6QDL_PAD_ENET_RX_ER__ENET_RX_ER	0x1b0b0
+			MX6QDL_PAD_ENET_TX_EN__ENET_TX_EN	0x1b0b0
+			MX6QDL_PAD_ENET_RXD0__ENET_RX_DATA0	0x1b0b0
+			MX6QDL_PAD_ENET_RXD1__ENET_RX_DATA1	0x1b0b0
+			MX6QDL_PAD_ENET_TXD0__ENET_TX_DATA0	0x1b0b0
+			MX6QDL_PAD_ENET_TXD1__ENET_TX_DATA1	0x1b0b0
+			MX6QDL_PAD_GPIO_16__ENET_REF_CLK	0x4001b0a1
+			MX6QDL_PAD_KEY_ROW1__GPIO4_IO09		0x1b0b0
+		>;
+	};
+
 	pinctrl_flexcan1: flexcan1grp {
 		fsl,pins = <
 			MX6QDL_PAD_GPIO_8__FLEXCAN1_RX		0x17059
