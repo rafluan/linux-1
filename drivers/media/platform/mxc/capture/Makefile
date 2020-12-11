@@ -32,6 +32,12 @@ obj-$(CONFIG_MXC_CAMERA_OV5640_MIPI_V2) += ov5640_camera_mipi_v2.o
 ov5647_camera_mipi-objs := ov5647_mipi.o
 obj-$(CONFIG_MXC_CAMERA_OV5647_MIPI) += ov5647_camera_mipi.o
 
+ov5640_camera_dual_mipi-objs := ov5640_dual_mipi.o
+obj-$(CONFIG_MXC_CAMERA_OV5640_DUAL_MIPI) += ov5640_camera_dual_mipi.o
+
+ov5640_camera_dummy-objs := ov5640_dummy.o
+obj-$(CONFIG_MXC_CAMERA_OV5640_DUMMY) += ov5640_camera_dummy.o
+
 adv7180_tvin-objs := adv7180.o
 obj-$(CONFIG_MXC_TVIN_ADV7180) += adv7180_tvin.o
 
