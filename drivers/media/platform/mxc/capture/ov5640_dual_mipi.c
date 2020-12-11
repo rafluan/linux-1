@@ -1493,7 +1493,7 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 
 	printk("ov5640_dual_mipi: ov5640_init_mode\n");
 
-	printk(KERN_ERR "ov5640_dual_mipi: %s() in %s: frame_rate = %d\n", __func__, __FILE__, (int)frame_rate);
+	printk(KERN_ERR "ov5640_dual_mipi: %s() in %s: frame_rate = %d, 3 sec timeout\n", __func__, __FILE__, (int)frame_rate);
 	printk(KERN_ERR "ov5640_dual_mipi: %s() in %s: mode = %d\n", __func__, __FILE__, (int)mode);
 
 	if ((mode > ov5640_mode_MAX || mode < ov5640_mode_MIN)
@@ -1581,7 +1581,7 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 		/* dump the first nine frames: 1/30*9 */
 		msec_wait4stable = 300;
 	}
-	msec_wait4stable += 1000;	// add 1 second for testing
+	msec_wait4stable += 3000;	// add 3 seconds, originally, 1 sec, not sufficient
 	msleep(msec_wait4stable);
 
 	if (mipi_csi2_info) {
