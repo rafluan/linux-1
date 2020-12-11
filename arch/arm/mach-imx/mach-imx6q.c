@@ -255,6 +255,16 @@ static void __init imx6q_csi_mux_init(void)
 		else if (of_machine_is_compatible("fsl,imx6dl-sabresd") ||
 			 of_machine_is_compatible("fsl,imx6dl-sabreauto"))
 			regmap_update_bits(gpr, IOMUXC_GPR13, 0x3F, 0x0C);
+		/*
+		 * Support for Kontron SMARC  Faro.
+		 * In Faro Custom Board, FPGA mipi-2-par is connected in IPU2.CSI1.
+		 * So Set GPR1 bit 20 to 0x1 for enabling Parallel Camera Interface in IPU2.CSI1
+		 */
+		else if (of_machine_is_compatible("kontron,imx6q-smx6"))
+		{
+			printk("For Faro Custom Board, Set GPR1 bit 20 to 0x1 for enabling Parallel Camera Interface in IPU2.CSI1 \n");
+			regmap_update_bits(gpr, IOMUXC_GPR1, IMX6Q_GPR1_MIPI_IPU2_MUX_MASK,IMX6Q_GPR1_MIPI_IPU2_MUX_IOMUX);
+		}
 	} else {
 		pr_err("%s(): failed to find fsl,imx6q-iomux-gpr regmap\n",
 		       __func__);
