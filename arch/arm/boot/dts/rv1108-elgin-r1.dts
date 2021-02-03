@@ -241,13 +241,16 @@
 };
 
 &pinctrl {
-    hog {
-        pin_hog: pinhog {
-            rockchip,pins = <3 RK_PC4 RK_FUNC_GPIO &pcfg_pull_up_drv_8ma>,
-            <3 RK_PC3 RK_FUNC_GPIO &pcfg_pull_up_drv_8ma>,
-            <3 RK_PC7 RK_FUNC_GPIO &pcfg_pull_up_drv_8ma>;
-        };
-    };
+	pinctrl-names = "default";
+	pinctrl-0 = <&pin_hog>;
+
+	hog {
+		pin_hog: pinhog {
+			rockchip,pins = <3 RK_PC4 RK_FUNC_GPIO &pcfg_pull_up_drv_8ma>,
+					 <3 RK_PC3 RK_FUNC_GPIO &pcfg_pull_up_drv_8ma>,
+					 <3 RK_PC7 RK_FUNC_GPIO &pcfg_pull_up_drv_8ma>;
+		};
+	};
 
 	uart2m0 {
 		uart2m0_xfer_pullup: uart2m0-xfer-pullup {
