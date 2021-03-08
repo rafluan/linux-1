@@ -159,6 +159,8 @@
 
 &usb0 {
 	dr_mode = "peripheral";
+	interrupts-extended = <&intc 18 &tps 0>;
+	interrupt-names = "mc", "vbus";
 	status = "okay";
 };
 
