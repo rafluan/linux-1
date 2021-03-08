@@ -27,13 +27,6 @@
 		reg = <0x80000000 0x10000000>;
 	};
 
-	vmmcsd_fixed: vmmcsd-fixed-regulator {
-		compatible = "regulator-fixed";
-		regulator-name = "vmmcsd_fixed";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-	};
-
 	leds {
 		pinctrl-names = "default";
 		pinctrl-0 = <&user_leds>;
@@ -122,7 +115,7 @@
 	no-1-8-v;
 	max-frequency = <26000000>;
 	sd-uhs-sdr25;
-	vmmc-supply = <&vmmcsd_fixed>;
+	vmmc-supply = <&ldo3_reg>;
 	non-removable;
 	status = "okay";
 };
