@@ -68,6 +68,11 @@
 #define M41T80_FEATURE_SQ	BIT(2)	/* Squarewave feature */
 #define M41T80_FEATURE_WD	BIT(3)	/* Extra watchdog resolution */
 #define M41T80_FEATURE_SQ_ALT	BIT(4)	/* RSx bits are in reg 4 */
+#define M41T80_FEATURE_NVRAM	BIT(5)	/* NVRAM feature */
+
+#define M41T87_NVRAM_START	0x20
+#define M41T87_NVRAM_END	0x9F
+#define M41T87_NVRAM_LEN	(M41T87_NVRAM_END - M41T87_NVRAM_START + 1)
 
 static const struct i2c_device_id m41t80_id[] = {
 	{ "m41t62", M41T80_FEATURE_SQ | M41T80_FEATURE_SQ_ALT },
@@ -79,7 +84,7 @@ static const struct i2c_device_id m41t80_id[] = {
 	{ "m41t83", M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ },
 	{ "m41st84", M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ },
 	{ "m41st85", M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ },
-	{ "m41st87", M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ },
+	{ "m41st87", M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ | M41T80_FEATURE_NVRAM},
 	{ "rv4162", M41T80_FEATURE_SQ | M41T80_FEATURE_WD | M41T80_FEATURE_SQ_ALT },
 	{ }
 };
@@ -124,7 +129,7 @@ static const struct of_device_id m41t80_of_match[] = {
 	},
 	{
 		.compatible = "st,m41t87",
-		.data = (void *)(M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ)
+		.data = (void *)(M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ | M41T80_FEATURE_NVRAM)
 	},
 	{
 		.compatible = "microcrystal,rv4162",
@@ -147,6 +152,7 @@ struct m41t80_data {
 	unsigned long features;
 	struct i2c_client *client;
 	struct rtc_device *rtc;
+	struct nvmem_config nvmem_config;
 #ifdef CONFIG_COMMON_CLK
 	struct clk_hw sqw;
 	unsigned long freq;
@@ -869,6 +875,68 @@ static struct notifier_block wdt_notifier = {
  *****************************************************************************
  */
 
+/* block read */
+static int
+m41t80_i2c_read_regs(struct i2c_client *client, u8 reg, u8 buf[],
+		      unsigned len)
+{
+	int ret;
+
+	ret = i2c_smbus_read_i2c_block_data(client, reg, len, buf);
+	return (ret < 0) ? ret : 0;
+}
+
+/* block write */
+static int
+m41t80_i2c_set_regs(struct i2c_client *client, u8 reg, u8 const buf[],
+		     unsigned len)
+{
+	int ret;
+
+	ret = i2c_smbus_write_i2c_block_data(client, reg, len, buf);
+	return (ret < 0) ? ret : 0;
+}
+
+static int m41t87_nvmem_read(void *priv, unsigned int off, void *buf,
+			      size_t count)
+{
+	struct m41t80_data *m41t80 = priv;
+	struct i2c_client *client = to_i2c_client(m41t80->rtc->dev.parent);
+	int ret;
+
+	/* nvmem sanitizes offset/count for us, but count==0 is possible */
+	if (!count)
+		return count;
+	ret = m41t80_i2c_read_regs(client, M41T87_NVRAM_START + off, buf,
+				    count);
+	return ret == 0 ? count : ret;
+}
+
+static int m41t87_nvmem_write(void *priv, unsigned int off, void *buf,
+			       size_t count)
+{
+	struct m41t80_data *m41t80 = priv;
+	struct i2c_client *client = to_i2c_client(m41t80->rtc->dev.parent);
+	int ret;
+
+	/* nvmem sanitizes off/count for us, but count==0 is possible */
+	if (!count)
+		return count;
+	ret = m41t80_i2c_set_regs(client, M41T87_NVRAM_START + off, buf,
+				   count);
+
+	return ret == 0 ? count : ret;
+}
+
+static const struct nvmem_config m41t87_nvmem_cfg = {
+	.name = "m41t87_nvram",
+	.word_size = 1,
+	.stride = 1,
+	.size = M41T87_NVRAM_LEN,
+	.reg_read = m41t87_nvmem_read,
+	.reg_write = m41t87_nvmem_write,
+};
+
 static int m41t80_probe(struct i2c_client *client,
 			const struct i2c_device_id *id)
 {
@@ -981,6 +1049,14 @@ static int m41t80_probe(struct i2c_client *client,
 	rc = rtc_register_device(m41t80_data->rtc);
 	if (rc)
 		return rc;
+
+	if (m41t80_data->features & M41T80_FEATURE_NVRAM) {
+		m41t80_data->nvmem_config = m41t87_nvmem_cfg;
+		m41t80_data->nvmem_config.priv = m41t80_data;
+		rc = rtc_nvmem_register(m41t80_data->rtc, &m41t80_data->nvmem_config);
+		if (rc < 0)
+			return rc;
+	}
 
 	return 0;
 }
