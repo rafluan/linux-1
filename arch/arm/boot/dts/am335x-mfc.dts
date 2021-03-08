@@ -114,7 +114,6 @@
 	bus-width = <8>;
 	no-1-8-v;
 	max-frequency = <26000000>;
-	sd-uhs-sdr25;
 	vmmc-supply = <&ldo3_reg>;
 	non-removable;
 	status = "okay";
