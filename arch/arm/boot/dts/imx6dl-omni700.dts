@@ -53,6 +53,7 @@
 	usdhc2_pwrseq: usdhc1_pwrseq {
 		compatible = "mmc-pwrseq-simple";
 		reset-gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;
+		post-power-on-delay-ms = <10>;
 	};
 };
 
