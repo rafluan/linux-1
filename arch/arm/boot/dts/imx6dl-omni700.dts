@@ -31,11 +31,6 @@
 		status = "okay";
 	};
 
-	buzzer {
-		compatible = "pwm-beeper";
-		pwms = <&pwm2 0 5000000>;
-	};
-
 	panel {
 		compatible = "edt,et070wblg3";
 		backlight = <&backlight_lvds>;
@@ -193,13 +188,6 @@
 	status = "okay";
 };
 
-&pwm2 {
-	#pwm-cells = <2>;
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_pwm2>;
-	status = "okay";
-};
-
 &snvs_rtc {
 	status = "disabled";
 };
@@ -249,6 +237,10 @@
 };
 
 &iomuxc {
+
+	pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_buzzer>;
+
 	pinctrl_camera: cameragrp {
 		fsl,pins = <
 			MX6QDL_PAD_NANDF_CS0__GPIO6_IO11	0x1b0b0
@@ -335,9 +327,9 @@
 		>;
 	};
 
-	pinctrl_pwm2: pwm2grp {
+	pinctrl_buzzer: buzzer {
 		fsl,pins = <
-			MX6QDL_PAD_GPIO_1__PWM2_OUT		0x1b0b1
+			MX6QDL_PAD_GPIO_1__GPIO1_IO01 0x80000000
 		>;
 	};
 
