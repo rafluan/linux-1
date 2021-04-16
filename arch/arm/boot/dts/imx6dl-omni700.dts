@@ -23,7 +23,7 @@
 		reg = <0x10000000 0x40000000>;
 	};
 
-	backlight_lvds: backlight-lvds {
+	backlight: backlight {
 		compatible = "pwm-backlight";
 		pwms = <&pwm1 0 5000000>;
 		brightness-levels = <0 4 8 16 32 64 128 255>;
@@ -33,7 +33,7 @@
 
 	panel {
 		compatible = "edt,et070wblg3";
-		backlight = <&backlight_lvds>;
+		backlight = <&backlight>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_lcd_enable>;
 		enable-gpios = <&gpio4 7 GPIO_ACTIVE_LOW>;
