@@ -237,9 +237,14 @@
 };
 
 &iomuxc {
-
 	pinctrl-names = "default";
-        pinctrl-0 = <&pinctrl_buzzer>;
+	pinctrl-0 = <&pinctrl_hog>;
+
+	pinctrl_hog: hoggrp {
+		fsl,pins = <
+			MX6QDL_PAD_GPIO_1__GPIO1_IO01		0x1b0b0
+		>;
+	};
 
 	pinctrl_camera: cameragrp {
 		fsl,pins = <
@@ -324,12 +329,6 @@
 	pinctrl_pwm1: pwm1grp {
 		fsl,pins = <
 			MX6QDL_PAD_GPIO_9__PWM1_OUT		0x1b0b1
-		>;
-	};
-
-	pinctrl_buzzer: buzzer {
-		fsl,pins = <
-			MX6QDL_PAD_GPIO_1__GPIO1_IO01 0x80000000
 		>;
 	};
 
