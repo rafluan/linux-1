@@ -45,6 +45,13 @@
 #define M41T80_REG_ALARM_SEC	0x0e
 #define M41T80_REG_FLAGS	0x0f
 #define M41T80_REG_SQW		0x13
+#define M41T80_TAMPER1		0x14
+#define M41T80_TAMPER2		0x15
+#define M41T80_TAMPER_TEB	BIT(7)
+#define M41T80_TAMPER_TIE	BIT(6)
+#define M41T80_TAMPER_TCM	BIT(5)
+#define M41T80_TAMPER_TPM	BIT(4)
+#define M41T80_TAMPER_CLR	BIT(0)
 
 #define M41T80_DATETIME_REG_SIZE	(M41T80_REG_YEAR + 1)
 #define M41T80_ALARM_REG_SIZE	\
@@ -58,6 +65,8 @@
 #define M41T80_ALHOUR_HT	BIT(6)	/* HT: Halt Update Bit */
 #define M41T80_FLAGS_OF		BIT(2)	/* OF: Oscillator Failure Bit */
 #define M41T80_FLAGS_AF		BIT(6)	/* AF: Alarm Flag Bit */
+#define M41T80_FLAGS_TB2		BIT(0)
+#define M41T80_FLAGS_TB1		BIT(1)
 #define M41T80_FLAGS_BATT_LOW	BIT(4)	/* BL: Battery Low Bit */
 #define M41T80_WATCHDOG_RB2	BIT(7)	/* RB: Watchdog resolution */
 #define M41T80_WATCHDOG_RB1	BIT(1)	/* RB: Watchdog resolution */
@@ -69,6 +78,7 @@
 #define M41T80_FEATURE_WD	BIT(3)	/* Extra watchdog resolution */
 #define M41T80_FEATURE_SQ_ALT	BIT(4)	/* RSx bits are in reg 4 */
 #define M41T80_FEATURE_NVRAM	BIT(5)	/* NVRAM feature */
+#define M41T80_FEATURE_TAMPER	BIT(6)	/* Tamper feature */
 
 #define M41T87_NVRAM_START	0x20
 #define M41T87_NVRAM_END	0x9F
@@ -84,7 +94,8 @@ static const struct i2c_device_id m41t80_id[] = {
 	{ "m41t83", M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ },
 	{ "m41st84", M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ },
 	{ "m41st85", M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ },
-	{ "m41st87", M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ | M41T80_FEATURE_NVRAM},
+	{ "m41st87", M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ |
+		     M41T80_FEATURE_NVRAM | M41T80_FEATURE_TAMPER},
 	{ "rv4162", M41T80_FEATURE_SQ | M41T80_FEATURE_WD | M41T80_FEATURE_SQ_ALT },
 	{ }
 };
@@ -129,7 +140,8 @@ static const struct of_device_id m41t80_of_match[] = {
 	},
 	{
 		.compatible = "st,m41t87",
-		.data = (void *)(M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ | M41T80_FEATURE_NVRAM)
+		.data = (void *)(M41T80_FEATURE_HT | M41T80_FEATURE_BL | M41T80_FEATURE_SQ |\
+				  M41T80_FEATURE_NVRAM | M41T80_FEATURE_TAMPER)
 	},
 	{
 		.compatible = "microcrystal,rv4162",
@@ -167,6 +179,7 @@ static irqreturn_t m41t80_handle_irq(int irq, void *dev_id)
 	struct mutex *lock = &m41t80->rtc->ops_lock;
 	unsigned long events = 0;
 	int flags, flags_afe;
+	int reg;
 
 	mutex_lock(lock);
 
@@ -186,6 +199,24 @@ static irqreturn_t m41t80_handle_irq(int irq, void *dev_id)
 		flags &= ~M41T80_FLAGS_AF;
 		flags_afe &= ~M41T80_ALMON_AFE;
 		events |= RTC_AF;
+	}
+
+	if (flags & M41T80_FLAGS_TB1) {
+		dev_err(&client->dev, "Tamper1 event detected\n");
+		reg = i2c_smbus_read_byte_data(client, M41T80_TAMPER1);
+		reg &= ~M41T80_TAMPER_TEB;
+		i2c_smbus_write_byte_data(client, M41T80_TAMPER1, reg);
+		reg |= M41T80_TAMPER_TEB;
+		i2c_smbus_write_byte_data(client, M41T80_TAMPER1, reg);
+	}
+
+	if (flags & M41T80_FLAGS_TB2) {
+		dev_err(&client->dev, "Tamper2 event detected\n");
+		reg = i2c_smbus_read_byte_data(client, M41T80_TAMPER2);
+		reg &= ~M41T80_TAMPER_TEB;
+		i2c_smbus_write_byte_data(client, M41T80_TAMPER2, reg);
+		reg |= M41T80_TAMPER_TEB;
+		i2c_smbus_write_byte_data(client, M41T80_TAMPER2, reg);
 	}
 
 	if (events) {
@@ -937,6 +968,55 @@ static const struct nvmem_config m41t87_nvmem_cfg = {
 	.reg_write = m41t87_nvmem_write,
 };
 
+static int mt41t80_parse_tamper(struct i2c_client *client)
+{
+	bool tamper1_normally_open, tamper2_normally_open;
+	bool tamper1_high, tamper2_high;
+	bool tamper1, tamper2;
+	int rc, reg;
+
+	tamper1 = of_property_read_bool(client->dev.of_node, "st,use-tamper1");
+	tamper2 = of_property_read_bool(client->dev.of_node, "st,use-tamper2");
+
+	if (!tamper1 && !tamper2)
+		return 0;
+
+	tamper1_normally_open = of_property_read_bool(client->dev.of_node,
+							"st,tp1in-normally-open");
+	tamper2_normally_open = of_property_read_bool(client->dev.of_node,
+							"st,tp2in-normally-open");
+	tamper1_high = of_property_read_bool(client->dev.of_node, "st,tp1in-high");
+	tamper2_high = of_property_read_bool(client->dev.of_node, "st,tp2in-high");
+
+	reg = 0;
+	if (tamper1)
+		reg |= M41T80_TAMPER_TEB | M41T80_TAMPER_TIE;
+	if (tamper1_normally_open)
+		reg |= M41T80_TAMPER_TCM;
+	if (tamper1_high)
+		reg |= M41T80_TAMPER_TPM;
+	reg |= M41T80_TAMPER_CLR;
+
+	rc = i2c_smbus_write_byte_data(client, M41T80_TAMPER1, reg);
+	if (rc < 0)
+		return rc;
+
+	reg = 0;
+	if (tamper2)
+		reg |= M41T80_TAMPER_TEB | M41T80_TAMPER_TIE;
+	if (tamper2_normally_open)
+		reg |= M41T80_TAMPER_TCM;
+	if (tamper2_high)
+		reg |= M41T80_TAMPER_TPM;
+	reg |= M41T80_TAMPER_CLR;
+
+	rc = i2c_smbus_write_byte_data(client, M41T80_TAMPER2, reg);
+	if (rc < 0)
+		return rc;
+
+	return 0;
+}
+
 static int m41t80_probe(struct i2c_client *client,
 			const struct i2c_device_id *id)
 {
@@ -1026,6 +1106,12 @@ static int m41t80_probe(struct i2c_client *client,
 	if (rc < 0) {
 		dev_err(&client->dev, "Can't clear ST bit\n");
 		return rc;
+	}
+
+	if (m41t80_data->features & M41T80_FEATURE_TAMPER) {
+		rc = mt41t80_parse_tamper(client);
+		if (rc < 0)
+			return rc;
 	}
 
 #ifdef CONFIG_RTC_DRV_M41T80_WDT
