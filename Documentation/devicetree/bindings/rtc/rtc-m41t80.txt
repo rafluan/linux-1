@@ -20,6 +20,18 @@ Optional properties:
 - clock-output-names: From common clock binding to override the default output
                       clock name
 - wakeup-source: Enables wake up of host system on alarm
+- st,use-tamper1: Use the TP1IN pin as tamper functionality. If not present,
+TP1N pin is not used as tamper.
+- st,use-tamper2: Use the TP2IN pin as tamper functionality. If not present,
+TP2N pin is not used as tamper.
+- st,tp1in-normally-open: Use TP1IN pin as a normally open switch. If not
+present, use it as a normally closed switch.
+- st,tp2in-normally-open: Use TP2IN pin as a normally open switch. If not
+present, use it as a normally closed switch.
+- st,tp1in-high: Detect TP1IN tamper event when it switches from low to high.
+If not present, detect the tamper event when TP1IN changes from high to low.
+- st,tp2in-high: Detect TP2IN event event when it switches from low to high.
+If not present, detect the tamper event when TP2IN changes from high to low.
 
 Example:
 	rtc@68 {
