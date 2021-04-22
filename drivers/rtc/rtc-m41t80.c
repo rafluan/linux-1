@@ -238,7 +238,7 @@ static irqreturn_t m41t80_handle_irq(int irq, void *dev_id)
 	}
 
 	if (flags & M41T80_FLAGS_TB1) {
-		dev_err(&client->dev, "Tamper1 event detected\n");
+		dev_warn(&client->dev, "Tamper1 event detected\n");
 		err = i2c_smbus_read_i2c_block_data(client, M41T80_REG_SSEC,
 						     sizeof(m41t80->tamper),
 						     m41t80->tamper);
@@ -258,7 +258,7 @@ static irqreturn_t m41t80_handle_irq(int irq, void *dev_id)
 	}
 
 	if (flags & M41T80_FLAGS_TB2) {
-		dev_err(&client->dev, "Tamper2 event detected\n");
+		dev_warn(&client->dev, "Tamper2 event detected\n");
 		err = i2c_smbus_read_i2c_block_data(client, M41T80_REG_SSEC,
 						     sizeof(m41t80->tamper),
 						     m41t80->tamper);
