@@ -188,7 +188,8 @@ static int tps65217_charger_probe(struct platform_device *pdev)
 	struct power_supply_config cfg = {};
 	struct task_struct *poll_task;
 	int irq[NUM_CHARGER_IRQS];
-	int ret;
+	int ret, val;
+	u32 value;
 	int i;
 
 	charger = devm_kzalloc(&pdev->dev, sizeof(*charger), GFP_KERNEL);
@@ -212,6 +213,19 @@ static int tps65217_charger_probe(struct platform_device *pdev)
 
 	irq[0] = platform_get_irq_byname(pdev, "USB");
 	irq[1] = platform_get_irq_byname(pdev, "AC");
+
+	if (!of_property_read_u32(cfg.of_node,"tps65217,mux-out", &value)) {
+		ret = tps65217_reg_read(charger->tps, TPS65217_REG_MUXCTRL, &val);
+		if (ret < 0)
+			return ret;
+
+		val &= ~TPS65217_MUXCTRL_MUX_MASK;
+		val |= value;
+		ret = tps65217_reg_write(charger->tps, TPS65217_REG_MUXCTRL,
+					  val, TPS65217_PROTECT_NONE);
+		if (ret < 0)
+			return ret;
+	}
 
 	ret = tps65217_config_charger(charger);
 	if (ret < 0) {
