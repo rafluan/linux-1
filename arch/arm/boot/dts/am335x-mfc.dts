@@ -257,6 +257,14 @@
 	};
 };
 
+&tscadc {
+	status = "okay";
+	adc {
+		ti,adc-channels = <7>;
+		ti,chan-step-avg = <16>;
+	};
+};
+
 &am33xx_pinmux {
 	pinctrl-names = "default";
 	pinctrl-0 = <&clkout2_pin>;
