@@ -8,10 +8,22 @@ Required Properties:
 
 This node is a subnode of the tps65217 PMIC.
 
+Optional properties:
+- tps65217,mux-out: The voltage input that goes to the MUX_OUT pin. Possible
+values are: 0, 1, 2, 3, 4 and 5 as per the table below:
+
+0: MUX_OUT is put in High Impedance
+1: MUX_OUT = VBAT
+2: MUX_OUT = VSYS
+3: MUX_OUT = VTS
+4: MUX_OUT = VICH
+5: MUX_OUT = MUX_IN
+
 Example:
 
 	tps65217-charger {
 		compatible = "ti,tps65217-charger";
 		interrupts = <0>, <1>;
 		interrupt-names = "USB", "AC";
+		tps65217,mux-out = <1>;	/* MUX_OUT = VBAT */
 	};
