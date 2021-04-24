@@ -135,6 +135,7 @@
 	ti,pmic-shutdown-controller;
 
 	charger {
+		tps65217,mux-out = <1>;
 		status = "okay";
 	};
 
