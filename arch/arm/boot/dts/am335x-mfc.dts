@@ -133,6 +133,8 @@
 
 &tps {
 	ti,pmic-shutdown-controller;
+	interrupt-parent = <&intc>;
+	interrupts = <7>; /* NNMI */
 
 	charger {
 		tps65217,mux-out = <1>;
