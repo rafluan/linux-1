@@ -134,6 +134,10 @@
 &tps {
 	ti,pmic-shutdown-controller;
 
+	charger {
+		status = "okay";
+	};
+
 	regulators {
 		dcdc1_reg: regulator@0 {
 			regulator-name = "vdds_dpr";
