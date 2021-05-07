@@ -32,6 +32,7 @@ struct tps65217_charger {
 	struct device *dev;
 	struct power_supply *psy;
 	struct power_supply *mains;
+	struct power_supply *usb;
 
 	int	online;
 	int	prev_online;
@@ -44,6 +45,10 @@ static enum power_supply_property tps65217_ac_props[] = {
 };
 
 static enum power_supply_property tps65217_charger_props[] = {
+	POWER_SUPPLY_PROP_ONLINE,
+};
+
+static enum power_supply_property tps65217_usb_props[] = {
 	POWER_SUPPLY_PROP_ONLINE,
 };
 
@@ -136,6 +141,22 @@ static int tps65217_ac_get_property(struct power_supply *psy,
 	return -EINVAL;
 }
 
+static int tps65217_usb_get_property(struct power_supply *psy,
+					 enum power_supply_property psp,
+					 union power_supply_propval *val)
+{
+	struct tps65217_charger *charger = power_supply_get_drvdata(psy);
+	int ret, reg;
+
+	if (psp == POWER_SUPPLY_PROP_ONLINE) {
+		ret = tps65217_reg_read(charger->tps, TPS65217_REG_STATUS, &reg);
+		if (ret < 0)
+			return ret;
+		val->intval = !!(reg & TPS65217_STATUS_USBPWR);
+		return 0;
+	}
+	return -EINVAL;
+}
 
 static irqreturn_t tps65217_charger_irq(int irq, void *dev)
 {
@@ -212,6 +233,14 @@ static const struct power_supply_desc tps65217_mains_desc = {
 	.num_properties	= ARRAY_SIZE(tps65217_ac_props),
 };
 
+static const struct power_supply_desc tps65217_usb_desc = {
+	.name			= "tps65217-usb",
+	.type			= POWER_SUPPLY_TYPE_USB,
+	.get_property		= tps65217_usb_get_property,
+	.properties		= tps65217_usb_props,
+	.num_properties	= ARRAY_SIZE(tps65217_usb_props),
+};
+
 static int tps65217_charger_probe(struct platform_device *pdev)
 {
 	struct tps65217 *tps = dev_get_drvdata(pdev->dev.parent);
@@ -250,6 +279,12 @@ static int tps65217_charger_probe(struct platform_device *pdev)
 		return PTR_ERR(charger->mains);
 	}
 
+	charger->usb = devm_power_supply_register(&pdev->dev,
+						   &tps65217_usb_desc, &cfg);
+	if (IS_ERR(charger->usb)) {
+		dev_err(&pdev->dev, "failed: usb power supply register\n");
+		return PTR_ERR(charger->usb);
+	}
 	irq[0] = platform_get_irq_byname(pdev, "USB");
 	irq[1] = platform_get_irq_byname(pdev, "AC");
 
