@@ -165,8 +165,10 @@ struct m41t80_data {
 	struct i2c_client *client;
 	struct rtc_device *rtc;
 	struct nvmem_config nvmem_config;
-	unsigned char tamper[8];
-	bool tamper_detected;
+	unsigned char tamper0[8];
+	unsigned char tamper1[8];
+	bool tamper0_detected;
+	bool tamper1_detected;
 #ifdef CONFIG_COMMON_CLK
 	struct clk_hw sqw;
 	unsigned long freq;
@@ -181,31 +183,65 @@ static ssize_t timestamp0_show(struct device *dev,
 	struct m41t80_data *m41t80 = i2c_get_clientdata(client);
 	struct rtc_time tm;
 
-	if (!m41t80->tamper_detected)
+	if (!m41t80->tamper0_detected)
 		return 0;
 
-	tm.tm_sec = bcd2bin(m41t80->tamper[M41T80_REG_SEC] & 0x7f);
-	tm.tm_min = bcd2bin(m41t80->tamper[M41T80_REG_MIN] & 0x7f);
-	tm.tm_hour = bcd2bin(m41t80->tamper[M41T80_REG_HOUR] & 0x3f);
-	tm.tm_mday = bcd2bin(m41t80->tamper[M41T80_REG_DAY] & 0x3f);
-	tm.tm_wday = m41t80->tamper[M41T80_REG_WDAY] & 0x07;
-	tm.tm_mon = bcd2bin(m41t80->tamper[M41T80_REG_MON] & 0x1f) - 1;
+	tm.tm_sec = bcd2bin(m41t80->tamper0[M41T80_REG_SEC] & 0x7f);
+	tm.tm_min = bcd2bin(m41t80->tamper0[M41T80_REG_MIN] & 0x7f);
+	tm.tm_hour = bcd2bin(m41t80->tamper0[M41T80_REG_HOUR] & 0x3f);
+	tm.tm_mday = bcd2bin(m41t80->tamper0[M41T80_REG_DAY] & 0x3f);
+	tm.tm_wday = m41t80->tamper0[M41T80_REG_WDAY] & 0x07;
+	tm.tm_mon = bcd2bin(m41t80->tamper0[M41T80_REG_MON] & 0x1f) - 1;
 
 	/* assume 20YY not 19YY, and ignore the Century Bit */
-	tm.tm_year = bcd2bin(m41t80->tamper[M41T80_REG_YEAR]) + 100;
+	tm.tm_year = bcd2bin(m41t80->tamper0[M41T80_REG_YEAR]) + 100;
 
 	return sprintf(buf, "%lld\n", rtc_tm_to_time64(&tm));
 }
 
 static DEVICE_ATTR_RO(timestamp0);
 
-static struct attribute *m41t80_tamper_attrs[] = {
+static struct attribute *m41t80_tamper0_attrs[] = {
 	&dev_attr_timestamp0.attr,
 	NULL
 };
 
-static const struct attribute_group m41t80_tamper_sysfs_files = {
-	.attrs	= m41t80_tamper_attrs,
+static const struct attribute_group m41t80_tamper0_sysfs_files = {
+	.attrs	= m41t80_tamper0_attrs,
+};
+
+static ssize_t timestamp1_show(struct device *dev,
+				struct device_attribute *attr, char *buf)
+{
+	struct i2c_client *client = to_i2c_client(dev->parent);
+	struct m41t80_data *m41t80 = i2c_get_clientdata(client);
+	struct rtc_time tm;
+
+	if (!m41t80->tamper1_detected)
+		return 0;
+
+	tm.tm_sec = bcd2bin(m41t80->tamper1[M41T80_REG_SEC] & 0x7f);
+	tm.tm_min = bcd2bin(m41t80->tamper1[M41T80_REG_MIN] & 0x7f);
+	tm.tm_hour = bcd2bin(m41t80->tamper1[M41T80_REG_HOUR] & 0x3f);
+	tm.tm_mday = bcd2bin(m41t80->tamper1[M41T80_REG_DAY] & 0x3f);
+	tm.tm_wday = m41t80->tamper1[M41T80_REG_WDAY] & 0x07;
+	tm.tm_mon = bcd2bin(m41t80->tamper1[M41T80_REG_MON] & 0x1f) - 1;
+
+	/* assume 20YY not 19YY, and ignore the Century Bit */
+	tm.tm_year = bcd2bin(m41t80->tamper1[M41T80_REG_YEAR]) + 100;
+
+	return sprintf(buf, "%lld\n", rtc_tm_to_time64(&tm));
+}
+
+static DEVICE_ATTR_RO(timestamp1);
+
+static struct attribute *m41t80_tamper1_attrs[] = {
+	&dev_attr_timestamp1.attr,
+	NULL
+};
+
+static const struct attribute_group m41t80_tamper1_sysfs_files = {
+	.attrs	= m41t80_tamper1_attrs,
 };
 
 static irqreturn_t m41t80_handle_irq(int irq, void *dev_id)
@@ -240,8 +276,8 @@ static irqreturn_t m41t80_handle_irq(int irq, void *dev_id)
 	if (flags & M41T80_FLAGS_TB1) {
 		dev_warn(&client->dev, "Tamper1 event detected\n");
 		err = i2c_smbus_read_i2c_block_data(client, M41T80_REG_SSEC,
-						     sizeof(m41t80->tamper),
-						     m41t80->tamper);
+						     sizeof(m41t80->tamper0),
+						     m41t80->tamper0);
 		if (err < 0) {
 			dev_err(&client->dev, "Unable to read tamper1 date\n");
 			mutex_unlock(lock);
@@ -254,14 +290,14 @@ static irqreturn_t m41t80_handle_irq(int irq, void *dev_id)
 		i2c_smbus_write_byte_data(client, M41T80_TAMPER1, reg);
 		sysfs_notify(&m41t80->rtc->dev.kobj, NULL,
 			     dev_attr_timestamp0.attr.name);
-		m41t80->tamper_detected = true;
+		m41t80->tamper0_detected = true;
 	}
 
 	if (flags & M41T80_FLAGS_TB2) {
 		dev_warn(&client->dev, "Tamper2 event detected\n");
 		err = i2c_smbus_read_i2c_block_data(client, M41T80_REG_SSEC,
-						     sizeof(m41t80->tamper),
-						     m41t80->tamper);
+						     sizeof(m41t80->tamper1),
+						     m41t80->tamper1);
 		if (err < 0) {
 			dev_err(&client->dev, "Unable to read tamper2 date\n");
 			mutex_unlock(lock);
@@ -273,8 +309,8 @@ static irqreturn_t m41t80_handle_irq(int irq, void *dev_id)
 		reg |= M41T80_TAMPER_TEB;
 		i2c_smbus_write_byte_data(client, M41T80_TAMPER2, reg);
 		sysfs_notify(&m41t80->rtc->dev.kobj, NULL,
-			     dev_attr_timestamp0.attr.name);
-		m41t80->tamper_detected = true;
+			     dev_attr_timestamp1.attr.name);
+		m41t80->tamper1_detected = true;
 	}
 
 	if (events) {
@@ -1171,7 +1207,11 @@ static int m41t80_probe(struct i2c_client *client,
 		if (rc < 0)
 			return rc;
 
-	rc = rtc_add_group(m41t80_data->rtc, &m41t80_tamper_sysfs_files);
+	rc = rtc_add_group(m41t80_data->rtc, &m41t80_tamper0_sysfs_files);
+		if (rc)
+			return rc;
+
+	rc = rtc_add_group(m41t80_data->rtc, &m41t80_tamper1_sysfs_files);
 		if (rc)
 			return rc;
 	}
