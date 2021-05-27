@@ -12,6 +12,7 @@
 #include <linux/device.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
+#include <linux/iio/consumer.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/slab.h>
@@ -38,6 +39,8 @@ struct tps65217_charger {
 	int	prev_online;
 
 	struct task_struct	*poll_task;
+	struct iio_channel *vbat_chan;
+	unsigned int mux_out_divider;
 };
 
 static enum power_supply_property tps65217_ac_props[] = {
@@ -46,6 +49,7 @@ static enum power_supply_property tps65217_ac_props[] = {
 
 static enum power_supply_property tps65217_charger_props[] = {
 	POWER_SUPPLY_PROP_ONLINE,
+	POWER_SUPPLY_PROP_VOLTAGE_NOW,
 };
 
 static enum power_supply_property tps65217_usb_props[] = {
@@ -111,17 +115,57 @@ static int tps65217_enable_charging(struct tps65217_charger *charger)
 	return 0;
 }
 
+/*
+ * Vmux_out = Vbat / 3;
+ *
+ * Maximum ADC voltage: 1.8V
+ * Maximum battery voltage: 1.8 * 3 = 5.4 V
+ * A battery voltage of 5.4 V corresponds to the 12-bit maximum: 4095
+ * Vbat = (5.4 * ADC reading) / 4095;
+ * 5.4 / 4095 = 1318,681 uV = 1318681 / 1000
+ */
+#define TPS65217_SCALING	(1318681/1000)
+static int tps65217_charger_vbat_voltage_now(struct tps65217_charger *charger,
+					   union power_supply_propval *val)
+{
+	int v_val, ret;
+
+	if (!charger->vbat_chan) {
+		val->intval = 0;
+		return 0;
+	}
+
+	ret = iio_read_channel_processed(charger->vbat_chan, &v_val);
+	if (ret < 0)
+		return ret;
+
+	/* Convert voltage to expected uV units */
+	val->intval = v_val * charger->mux_out_divider * TPS65217_SCALING;
+
+	return 0;
+}
+
 static int tps65217_charger_get_property(struct power_supply *psy,
 					 enum power_supply_property psp,
 					 union power_supply_propval *val)
 {
 	struct tps65217_charger *charger = power_supply_get_drvdata(psy);
+	int ret;
 
-	if (psp == POWER_SUPPLY_PROP_ONLINE) {
+	switch (psp) {
+	case POWER_SUPPLY_PROP_ONLINE:
 		val->intval = charger->online;
 		return 0;
+		break;
+	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
+		return tps65217_charger_vbat_voltage_now(charger, val);
+		break;
+	default:
+		ret = -EINVAL;
+		break;
 	}
-	return -EINVAL;
+
+	return ret;
 }
 
 static int tps65217_ac_get_property(struct power_supply *psy,
@@ -263,6 +307,14 @@ static int tps65217_charger_probe(struct platform_device *pdev)
 	cfg.of_node = pdev->dev.of_node;
 	cfg.drv_data = charger;
 
+	charger->vbat_chan = devm_iio_channel_get(&pdev->dev, "vbat");
+	if (IS_ERR(charger->vbat_chan)) {
+		ret = PTR_ERR(charger->vbat_chan);
+		if (ret == -EPROBE_DEFER)
+			return ret;
+		charger->vbat_chan = NULL;
+	}
+
 	charger->psy = devm_power_supply_register(&pdev->dev,
 						  &tps65217_charger_desc,
 						  &cfg);
@@ -300,6 +352,11 @@ static int tps65217_charger_probe(struct platform_device *pdev)
 		if (ret < 0)
 			return ret;
 	}
+
+	if (!of_property_read_u32(cfg.of_node,"tps65217,mux-out-divider", &value))
+		charger->mux_out_divider = value;
+	else
+		charger->mux_out_divider = 1;
 
 	ret = tps65217_config_charger(charger);
 	if (ret < 0) {

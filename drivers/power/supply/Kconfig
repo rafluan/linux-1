@@ -615,6 +615,7 @@ config CHARGER_TPS65090
 config CHARGER_TPS65217
 	tristate "TPS65217 battery charger driver"
 	depends on MFD_TPS65217
+	depends on IIO
 	help
 	 Say Y here to enable support for battery charging with TPS65217
 	 PMIC chips.
