@@ -136,6 +136,9 @@
 
 	charger {
 		tps65217,mux-out = <1>;
+		tps65217,mux-out-divider = <2>;
+		io-channels = <&am335x_adc 7>;
+		io-channel-names = "vbat";
 		status = "okay";
 	};
 
@@ -260,8 +263,8 @@
 &tscadc {
 	status = "okay";
 	adc {
-		ti,adc-channels = <7>;
-		ti,chan-step-avg = <16>;
+		/* Describe all channels as a workaround for now */
+		ti,adc-channels = <0 1 2 3 4 5 6 7>;
 	};
 };
 
