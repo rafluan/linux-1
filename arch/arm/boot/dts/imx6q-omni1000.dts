@@ -1,0 +1,151 @@
+// SPDX-License-Identifier: GPL-2.0+ OR MIT
+//
+// Copyright 2014-2020 Toradex
+// Copyright 2012 Freescale Semiconductor, Inc.
+// Copyright 2011 Linaro Ltd.
+
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include "imx6q.dtsi"
+#include "imx6qdl-apalis.dtsi"
+
+/ {
+	model = "Toradex Apalis iMX6D Module on Jacto Omni1000 Board";
+	compatible = "jacto,imx6q-omni1000", "toradex,apalis_imx6q", "fsl,imx6q";
+
+	/delete-node/ sound;
+
+	panel {
+		compatible = "aison,z080xg03jct3";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&lvds0_out>;
+			};
+		};
+	};
+
+	reg_mux_select: regulator-mux-select {
+		compatible = "regulator-fixed";
+		regulator-name = "mux-select";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio2 29 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+	};
+
+	reg_mux_enable: regulator-mux-enable {
+		compatible = "regulator-fixed";
+		regulator-name = "mux-enable";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio2 28 GPIO_ACTIVE_LOW>;
+		regulator-always-on;
+	};
+	
+	reg_camera_power: regulator-camera-power {
+		compatible = "regulator-fixed";
+		regulator-name = "camera-power";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio3 9 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+	};
+};
+
+&audmux {
+	status = "disabled";
+};
+
+&clks {
+	assigned-clocks = <&clks IMX6QDL_CLK_LDB_DI0_SEL>,
+			  <&clks IMX6QDL_CLK_LDB_DI1_SEL>,
+			  <&clks IMX6QDL_CLK_IPU1_DI0_PRE_SEL>,
+			  <&clks IMX6QDL_CLK_IPU2_DI0_PRE_SEL>;
+	assigned-clock-parents = <&clks IMX6QDL_CLK_PLL5_VIDEO_DIV>,
+				 <&clks IMX6QDL_CLK_PLL5_VIDEO_DIV>,
+				 <&clks IMX6QDL_CLK_PLL2_PFD2_396M>,
+				 <&clks IMX6QDL_CLK_PLL2_PFD2_396M>;
+};
+&i2c3 {
+	status = "okay";
+
+	camera@20 {
+		compatible = "adi,adv7280-m";
+		reg = <0x20>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_camera>;
+		powerdown-gpios = <&gpio3 6 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&gpio3 7 GPIO_ACTIVE_LOW>;
+		interrupt-parent = <&gpio3>;
+		interrupts = <8 IRQ_TYPE_LEVEL_LOW>;
+
+		port {
+			adv7280_to_mipi_csi2: endpoint {
+				remote-endpoint = <&mipi_csi2_in>;
+				clock-lanes = <0>;
+				data-lanes = <1>;
+			};
+		};
+	};
+};
+
+&ldb {
+	status = "okay";
+
+	lvds-channel@0 {
+		reg = <0>;
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <24>;
+		status = "okay";
+
+		port@4 {
+			reg = <4>;
+
+			lvds0_out: endpoint {
+				remote-endpoint = <&panel_in>;
+			};
+		};
+	};
+};
+
+&mipi_csi {
+	status = "okay";
+
+	port@0 {
+		reg = <0>;
+
+		mipi_csi2_in: endpoint {
+			remote-endpoint = <&adv7280_to_mipi_csi2>;
+			clock-lanes = <0>;
+			data-lanes = <1>;
+		};
+	};
+};
+
+&ssi1 {
+	status = "disabled";
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&usdhc1 {
+	status = "okay";
+};
+
+&iomuxc {
+	pinctrl-names = "default";
+	pinctrl_camera: cameragrp {
+		fsl,pins = <
+			MX6QDL_PAD_EIM_DA6__GPIO3_IO06	0x1b0b0
+			MX6QDL_PAD_EIM_DA8__GPIO3_IO08	0x1b0b0
+		>;
+	};
+};
