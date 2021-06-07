@@ -40,6 +40,20 @@
 	cpu-supply = <&reg_vdd_arm>;
 };
 
+/*
+ * The SoC devicetree sets the temperature thresholds for
+ * the low temperature grading (consumer). We always use
+ * the high grading (industrial) and need to raise the
+ * values accordingly.
+ */
+&cpu_alert0 {
+	temperature = <95000>;
+};
+
+&cpu_crit0 {
+	temperature = <105000>;
+};
+
 &ecspi1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_ecspi1>;
