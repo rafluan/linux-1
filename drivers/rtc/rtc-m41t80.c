@@ -1027,14 +1027,34 @@ static int m41t87_nvmem_read(void *priv, unsigned int off, void *buf,
 {
 	struct m41t80_data *m41t80 = priv;
 	struct i2c_client *client = to_i2c_client(m41t80->rtc->dev.parent);
-	int ret;
 
 	/* nvmem sanitizes offset/count for us, but count==0 is possible */
 	if (!count)
 		return count;
-	ret = m41t80_i2c_read_regs(client, M41T87_NVRAM_START + off, buf,
-				    count);
-	return ret == 0 ? count : ret;
+
+	if (count <= 32) {
+		m41t80_i2c_read_regs(client, M41T87_NVRAM_START + off, buf, count);
+	} else if (count <= 64) {
+		m41t80_i2c_read_regs(client, M41T87_NVRAM_START + off, buf, 32);
+		m41t80_i2c_read_regs(client, M41T87_NVRAM_START + off + 32, buf + 32,
+				     count - 32);
+	} else if (count <= 96) {
+		m41t80_i2c_read_regs(client, M41T87_NVRAM_START + off, buf, 32);
+		m41t80_i2c_read_regs(client, M41T87_NVRAM_START + off + 32, buf + 32,
+				      32);
+		m41t80_i2c_read_regs(client, M41T87_NVRAM_START + off + 64, buf + 64,
+				     count - 64);
+	} else {
+		m41t80_i2c_read_regs(client, M41T87_NVRAM_START + off, buf, count);
+		m41t80_i2c_read_regs(client, M41T87_NVRAM_START + off + 32, buf + 32,
+				     32);
+		m41t80_i2c_read_regs(client, M41T87_NVRAM_START + off + 64, buf + 64,
+				     32);
+		m41t80_i2c_read_regs(client, M41T87_NVRAM_START + off + 96, buf + 96,
+				     count - 96);
+	}
+
+	return count;
 }
 
 static int m41t87_nvmem_write(void *priv, unsigned int off, void *buf,
@@ -1042,15 +1062,34 @@ static int m41t87_nvmem_write(void *priv, unsigned int off, void *buf,
 {
 	struct m41t80_data *m41t80 = priv;
 	struct i2c_client *client = to_i2c_client(m41t80->rtc->dev.parent);
-	int ret;
 
 	/* nvmem sanitizes off/count for us, but count==0 is possible */
 	if (!count)
 		return count;
-	ret = m41t80_i2c_set_regs(client, M41T87_NVRAM_START + off, buf,
-				   count);
 
-	return ret == 0 ? count : ret;
+	if (count <= 32) {
+		m41t80_i2c_set_regs(client, M41T87_NVRAM_START + off, buf, count);
+	} else if (count <= 64) {
+		m41t80_i2c_set_regs(client, M41T87_NVRAM_START + off, buf, 32);
+		m41t80_i2c_set_regs(client, M41T87_NVRAM_START + off + 32, buf + 32,
+				     count - 32);
+	} else if (count <= 96) {
+		m41t80_i2c_set_regs(client, M41T87_NVRAM_START + off, buf, 32);
+		m41t80_i2c_set_regs(client, M41T87_NVRAM_START + off + 32, buf + 32,
+				     32);
+		m41t80_i2c_set_regs(client, M41T87_NVRAM_START + off + 64, buf + 64,
+				     count - 64);
+	} else {
+		m41t80_i2c_set_regs(client, M41T87_NVRAM_START + off, buf, 32);
+		m41t80_i2c_set_regs(client, M41T87_NVRAM_START + off + 32, buf + 32,
+				     32);
+		m41t80_i2c_set_regs(client, M41T87_NVRAM_START + off + 64, buf + 64,
+				     32);
+		m41t80_i2c_set_regs(client, M41T87_NVRAM_START + off + 96, buf + 96,
+				     count - 96);
+	}
+
+	return count;
 }
 
 static const struct nvmem_config m41t87_nvmem_cfg = {
