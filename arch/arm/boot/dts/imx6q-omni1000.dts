@@ -136,6 +136,10 @@
 	status = "okay";
 };
 
+&usbotg {
+        status = "okay";
+};
+
 &usdhc1 {
 	status = "okay";
 };
