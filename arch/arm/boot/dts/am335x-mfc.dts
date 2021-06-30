@@ -85,6 +85,13 @@
 	status = "okay";
 };
 
+&gpio0 {
+	gpio-line-names = "", "", "", "", "", "", "", "RESET_BTN",
+                          "", "", "", "", "", "", "", "",
+                          "", "", "", "", "", "", "", "",
+                          "", "", "", "", "", "", "", "";
+};
+
 &i2c0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c0_pins>;
