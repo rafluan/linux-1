@@ -46,7 +46,7 @@
 		gpio = <&gpio2 28 GPIO_ACTIVE_LOW>;
 		regulator-always-on;
 	};
-	
+
 	reg_camera_power: regulator-camera-power {
 		compatible = "regulator-fixed";
 		regulator-name = "camera-power";
@@ -167,15 +167,15 @@
 };
 
 &uart4 {
-        status = "okay";
+	status = "okay";
 };
 
 &uart5 {
-        status = "okay";
+	status = "okay";
 };
 
 &usbotg {
-        status = "okay";
+	status = "okay";
 };
 
 &usdhc1 {
