@@ -182,7 +182,7 @@
 #define V4L2_CID_ADV_FAST_SWITCH	(V4L2_CID_USER_ADV7180_BASE + 0x00)
 
 /* Initial number of frames to skip to avoid possible garbage */
-#define ADV7180_NUM_OF_SKIP_FRAMES       2
+#define ADV7180_NUM_OF_SKIP_FRAMES       50
 
 struct adv7180_state;
 
@@ -210,6 +210,7 @@ struct adv7180_state {
 	v4l2_std_id		curr_norm;
 	bool			powered;
 	bool			streaming;
+	bool			locked;
 	u8			input;
 
 	struct i2c_client	*client;
@@ -805,6 +806,7 @@ static int adv7180_s_stream(struct v4l2_subdev *sd, int enable)
 		if (state->chip_info->flags & ADV7180_FLAG_MIPI_CSI2)
 			adv7180_csi_write(state, 0x00, 0x80);
 		state->streaming = enable;
+		state->locked = false;
 		return 0;
 	}
 
@@ -821,6 +823,7 @@ static int adv7180_s_stream(struct v4l2_subdev *sd, int enable)
 		adv7180_csi_write(state, 0x2C, 0x00);
 		if (state->field == V4L2_FIELD_NONE)
 			adv7180_csi_write(state, 0x1D, 0x80);
+	if (state->locked)
 		adv7180_csi_write(state, 0x00, 0x00);
 	}
 
@@ -882,11 +885,15 @@ static const struct v4l2_subdev_ops adv7180_ops = {
 static irqreturn_t adv7180_irq(int irq, void *devid)
 {
 	struct adv7180_state *state = devid;
-	u8 isr3;
+	u8 isr1, isr3;
+
+	pr_err("%s:%d IRQ", __func__, __LINE__);
 
 	mutex_lock(&state->mutex);
+	isr1 = adv7180_read(state, ADV7180_REG_ISR1);
 	isr3 = adv7180_read(state, ADV7180_REG_ISR3);
 	/* clear */
+	adv7180_write(state, ADV7180_REG_ICR1, isr1);
 	adv7180_write(state, ADV7180_REG_ICR3, isr3);
 
 	if (isr3 & ADV7180_IRQ3_AD_CHANGE) {
@@ -896,6 +903,28 @@ static irqreturn_t adv7180_irq(int irq, void *devid)
 		};
 
 		v4l2_subdev_notify_event(&state->sd, &src_ch);
+	}
+
+	if (isr1 & ADV7180_IRQ1_LOCK) {
+		pr_err("%s:%d Lock", __func__, __LINE__);
+		state->locked = true;
+		/*
+		 * if the stream is already running, turn on the output
+		 * signal upon locking.
+		 */
+		if (state->streaming && state->chip_info->flags & ADV7180_FLAG_MIPI_CSI2)
+			adv7180_csi_write(state, 0x00, 0x00);
+	}
+
+	if (isr1 & ADV7180_IRQ1_UNLOCK) {
+		pr_err("%s:%d Unlock", __func__, __LINE__);
+		state->locked = false;
+		/*
+		 * if the stream is still running, turn off the output
+		 * signal upon unlocking.
+		 */
+		if (state->streaming && state->chip_info->flags & ADV7180_FLAG_MIPI_CSI2)
+			adv7180_csi_write(state, 0x00, 0x80);
 	}
 	mutex_unlock(&state->mutex);
 
@@ -1309,7 +1338,9 @@ static int init_device(struct adv7180_state *state)
 		if (ret < 0)
 			goto out_unlock;
 
-		ret = adv7180_write(state, ADV7180_REG_IMR1, 0);
+		/* enable the lock/unlock interrupts */
+		ret = adv7180_write(state, ADV7180_REG_IMR1,
+						ADV7180_IRQ1_LOCK | ADV7180_IRQ1_UNLOCK);
 		if (ret < 0)
 			goto out_unlock;
 
