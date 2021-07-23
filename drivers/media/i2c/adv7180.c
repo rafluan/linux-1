@@ -1284,6 +1284,22 @@ static int init_device(struct adv7180_state *state)
 
 	adv7180_set_field_mode(state);
 
+	/*
+	 * Check if the input selected on reset is valid for this device
+	 * and if not, reset to the first entry in INSEL table.
+	 */
+	ret = adv7180_read(state, ADV7180_REG_INPUT_CONTROL);
+	if (ret < 0)
+		goto out_unlock;
+
+	if (!(state->chip_info->valid_input_mask & BIT(ret)))
+		ret = 0;
+
+	/* Make sure the default input path is configured */
+	ret = state->chip_info->select_input(state, ret);
+	if (ret)
+		goto out_unlock;
+
 	/* register for interrupts */
 	if (state->irq > 0) {
 		/* config the Interrupt pin to be active low */
